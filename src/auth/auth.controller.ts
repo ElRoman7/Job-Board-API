@@ -11,4 +11,6 @@ export class AuthController {
     return this.authService.login(loginDto);
   }
 
+  // ToDo: Request reset password and reset password method (Repo: auth-nestjs)
+
 }

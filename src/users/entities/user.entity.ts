@@ -38,7 +38,7 @@ export class User{
     @OneToMany(() => Offer, (offer) => offer.user)
     offer: Offer;
 
-    //ToDo: Relaciones con recruiter y company
+    // ToDo: RFC
     
 
     @BeforeInsert()
