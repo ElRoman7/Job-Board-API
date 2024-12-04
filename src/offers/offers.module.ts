@@ -3,7 +3,7 @@ import { OffersService } from './offers.service';
 import { OffersController } from './offers.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Offer } from './entities/offer.entity';
-import { AuthModule } from 'src/auth/auth.module';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   controllers: [OffersController],

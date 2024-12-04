@@ -1,4 +1,4 @@
-import { Offer } from "src/offers/entities/offer.entity";
+import { Offer } from "../../offers/entities/offer.entity";
 import { BeforeInsert, BeforeUpdate, Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity('users')

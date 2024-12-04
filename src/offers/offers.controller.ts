@@ -5,8 +5,8 @@ import { UpdateOfferDto } from './dto/update-offer.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Offer } from './entities/offer.entity';
 import { Repository } from 'typeorm';
-import { Auth } from 'src/auth/decorators';
-import { ValidRoles } from 'src/users/interfaces/valid-roles';
+import { Auth } from '../auth/decorators';
+import { ValidRoles } from '../users/interfaces/valid-roles';
 
 @Controller('offers')
 export class OffersController {
