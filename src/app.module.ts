@@ -14,14 +14,19 @@ import { UsersModule } from './users/users.module';
   imports: [
     ConfigModule.forRoot(),
     TypeOrmModule.forRoot({
-      type: 'mysql',
+      ssl: process.env.STAGE === 'prod' ? true : false,
+      extra: {
+        ssl:
+          process.env.STAGE === 'prod' ? { rejectUnauthorized: false } : null,
+      },
+      type: 'postgres',
       host: process.env.DB_HOST,
       port: +process.env.DB_PORT,
-      database: process.env.MYSQL_DATABASE,
-      username: process.env.MYSQL_USER,
-      password: process.env.MYSQL_PASSWORD,
+      database: process.env.DB_NAME,
+      username: process.env.DB_USERNAME,
+      password: process.env.DB_PASSWORD,
       autoLoadEntities: true,
-      synchronize: true
+      synchronize: true,
     }),
     OffersModule,
     CompaniesModule,

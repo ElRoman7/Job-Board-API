@@ -1,32 +1,53 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Offer } from "src/offers/entities/offer.entity";
+import { BeforeInsert, BeforeUpdate, Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity('users')
 export class User{
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Column()
+    @Column('text', {unique: true})
     email:string
 
-    @Column()
+    @Column('text')
     password: string;
   
-    @Column()
+    @Column('text')
     fullname: string;
+    
+    @Column({type: 'varchar', length: 15, nullable: true, unique: true})
+    phoneNumber: string;
   
-    @Column({ type: 'varchar' })
-    type: 'candidate' | 'recruiter' | 'company';
-
-    @Column('simple-array') // Guarda los roles como un array de strings
+    @Column('text', {
+        array: true,
+        default: ['user']
+    }) //? Guarda los roles como un array de strings
     roles: string[];
   
     @Column({ default: true })
     is_active: boolean;
-    // Relaciones con recruiter y company
+
 
     @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
     created_at: Date;
   
     @Column({ type: 'timestamp', nullable: true, onUpdate: 'CURRENT_TIMESTAMP' })
     updated_at: Date;
+    
+    //* Relacion con El Usuario(Reclutador o empresa) creador de la oferta
+    @OneToMany(() => Offer, (offer) => offer.user)
+    offer: Offer;
+
+    //ToDo: Relaciones con recruiter y company
+    
+
+    @BeforeInsert()
+    checkFieldsBeforeInsert() {
+        this.email = this.email.toLowerCase().trim();
+    }
+
+    @BeforeUpdate()
+    checkFieldsBeforeUpdate() {
+        this.checkFieldsBeforeInsert();
+    }
 }

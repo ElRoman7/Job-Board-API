@@ -2,10 +2,17 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { OffersService } from './offers.service';
 import { CreateOfferDto } from './dto/create-offer.dto';
 import { UpdateOfferDto } from './dto/update-offer.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Offer } from './entities/offer.entity';
+import { Repository } from 'typeorm';
 
 @Controller('offers')
 export class OffersController {
-  constructor(private readonly offersService: OffersService) {}
+  constructor(
+    private readonly offersService: OffersService,
+    @InjectRepository(Offer)
+    private readonly offersRepository : Repository<Offer>
+  ) {}
 
   @Post()
   create(@Body() createOfferDto: CreateOfferDto) {

@@ -1,26 +1,51 @@
 import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { User } from './entities/user.entity';
+import { Repository } from 'typeorm';
+import * as bcrypt from 'bcrypt'
+import { ErrorHandlerService } from 'src/common/error-handler.service';
 
 @Injectable()
 export class UsersService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  constructor(
+    private readonly errorHandlerService : ErrorHandlerService,
+    @InjectRepository(User) private readonly usersRepository : Repository<User>
+  ) {}
+  async create(createUserDto: CreateUserDto) {
+    try {
+      const { password, ...rest } = createUserDto;
+      const user = this.usersRepository.create({
+        ...rest,
+        password: bcrypt.hashSync(password, 10)
+      });
+      await this.usersRepository.save(user);
+      return {
+        user
+      }
+    } catch (error) {
+      this.errorHandlerService.handleDBException(error)
+    }
   }
 
-  findAll() {
-    return `This action returns all users`;
+  async finOneByEmail(email: string): Promise<User> {
+    const user: User = await this.usersRepository.findOneBy({email})
+    return user;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
-  }
+  // findAll() {
+  //   return `This action returns all users`;
+  // }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
-  }
+  // findOne(id: number) {
+  //   return `This action returns a #${id} user`;
+  // }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
-  }
+  // update(id: number, updateUserDto: UpdateUserDto) {
+  //   return `This action updates a #${id} user`;
+  // }
+
+  // remove(id: number) {
+  //   return `This action removes a #${id} user`;
+  // }
 }

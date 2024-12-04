@@ -1,10 +1,11 @@
-import { Column, Entity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { User } from 'src/users/entities/user.entity';
+import { Column, Entity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne } from 'typeorm';
 
 @Entity('offers')
 export class Offer {
     @PrimaryGeneratedColumn('uuid')
     id: string;
-s
+
     @Column()
     title: string;
 
@@ -14,8 +15,11 @@ s
     @Column({ type: 'varchar' })
     status: 'draft' | 'published' | 'closed';
 
+    //ToDo: Relacion con el id de la empresa
+    //ToDo: Categorizar
     // Relaciones con un reclutador (Creador de la Oferta)
-    // Relacion con el id de la empresa
+    @ManyToOne(() => User, (user) => user.offer, {eager: true})
+    user: User
 
     @CreateDateColumn({ type: 'timestamp' })
     created_at: Date;
