@@ -5,6 +5,8 @@ import { UpdateOfferDto } from './dto/update-offer.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Offer } from './entities/offer.entity';
 import { Repository } from 'typeorm';
+import { Auth } from 'src/auth/decorators';
+import { ValidRoles } from 'src/users/interfaces/valid-roles';
 
 @Controller('offers')
 export class OffersController {
@@ -14,6 +16,7 @@ export class OffersController {
     private readonly offersRepository : Repository<Offer>
   ) {}
 
+  @Auth(ValidRoles.recruiter, ValidRoles.company)
   @Post()
   create(@Body() createOfferDto: CreateOfferDto) {
     return this.offersService.create(createOfferDto);
