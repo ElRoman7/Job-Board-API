@@ -2,15 +2,18 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { CompaniesService } from './companies.service';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
+import { CreateUserDto } from 'src/users/dto/create-user.dto';
 
 @Controller('companies')
 export class CompaniesController {
   constructor(private readonly companiesService: CompaniesService) {}
 
   @Post()
-  create(@Body() createCompanyDto: CreateCompanyDto) {
-    return this.companiesService.create(createCompanyDto);
+  create(@Body('company') createCompanyDto: CreateCompanyDto, @Body('user') createUserDto: CreateUserDto) {
+    return this.companiesService.create(createCompanyDto, createUserDto);
   }
+
+  //ToDo: upgradeUserToCompany (funcion para que un usuario se convierta en company)
 
   @Get()
   findAll() {
@@ -19,7 +22,7 @@ export class CompaniesController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.companiesService.findOne(+id);
+    return this.companiesService.findOne(id);
   }
 
   @Patch(':id')
