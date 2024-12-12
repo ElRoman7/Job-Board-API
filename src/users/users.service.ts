@@ -23,7 +23,6 @@ export class UsersService {
       });
     } catch (error) {
       this.errorHandlerService.handleDBException(error);
-      throw error; // Rethrow the error to be handled by the caller
     }
   }
   
