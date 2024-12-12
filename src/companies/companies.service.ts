@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
 import { Company } from './entities/company.entity';
@@ -8,6 +8,8 @@ import { UsersService } from 'src/users/users.service';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { ValidRoles } from 'src/users/interfaces/valid-roles';
 import { ErrorHandlerService } from 'src/common/error-handler.service';
+import { User } from 'src/users/entities/user.entity';
+import { executeWithTransaction } from 'src/common/utils/query-runner.util';
 
 @Injectable()
 export class CompaniesService {
@@ -18,34 +20,30 @@ export class CompaniesService {
     private readonly usersService: UsersService,
     private readonly errorHandlerService: ErrorHandlerService,
     private readonly dataSource: DataSource
-  ){}
-  
-  // Recibe el createCompanyDto sin el id del usuario que posteriormente será creado
-  async create(createCompanyDto: CreateCompanyDto, createUserDto: CreateUserDto) {
+  ){}  
+
+  async create(createCompanyDto: CreateCompanyDto, createUserDto: CreateUserDto): Promise<Company> {
     if(!createUserDto.roles.includes(ValidRoles.company)) throw new UnauthorizedException(`User needs ${ValidRoles.company} role`);
+    return await executeWithTransaction(this.dataSource, async (queryRunner) => {
+      try {
+        const user = await this.usersService.prepareUserForTransaction(createUserDto);
+        await queryRunner.manager.save(user)
+        const company = await this.prepareCompanyForTransaction(createCompanyDto, user);
+        await queryRunner.manager.save(company)
 
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-  
-    try {
-      const user = await this.usersService.create(createUserDto);
-      // Crea la compañía asignando el user_id manualmente
-      const company = this.companyRepository.create({
-        ...createCompanyDto,
-        user: user
-      });
+        return company
+      } catch (error) {
+        this.errorHandlerService.handleDBException(error)
+      }
+    });
+  }
 
-      await queryRunner.manager.save(company);
-      await queryRunner.commitTransaction();
-      return company; // Devuelve la compañía creada
-    } catch (error) {
-      await queryRunner.rollbackTransaction()
-      return this.errorHandlerService.handleDBException(error);
-    } finally {
-      // Liberar el queryRunner
-      await queryRunner.release();
-    }
+  async prepareCompanyForTransaction(createCompanyDto: CreateCompanyDto, user: User) : Promise<Company> {
+    const company = this.companyRepository.create({
+      ...createCompanyDto,
+      user
+    });
+    return company;
   }
   
 
@@ -53,8 +51,12 @@ export class CompaniesService {
     return `This action returns all companies`;
   }
 
-  findOne(id: string) {
-    return this.findCompanyWithUser(id);
+  async findOne(id: string) : Promise<Company>{
+    const company = await this.companyRepository.findOne({
+      where: {id}
+    })
+    if(!company) throw new NotFoundException(`Company with id ${id} not found`)
+    return company;
   }
 
   update(id: number, updateCompanyDto: UpdateCompanyDto) {
@@ -66,9 +68,11 @@ export class CompaniesService {
   }
 
   async findCompanyWithUser(id:string): Promise<Company>{
-    return await this.companyRepository.findOne({
+    const company = await this.companyRepository.findOne({
       where: {id},
       relations: ['user']
     })
+    if(!company) throw new NotFoundException(`Company with id ${id} not found`)
+    return company;
   }
 }

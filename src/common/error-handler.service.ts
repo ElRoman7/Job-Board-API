@@ -23,7 +23,7 @@ export class ErrorHandlerService {
     this.logger.error(error);
 
     throw new InternalServerErrorException(
-      'Unexpected error, Check server logssssss',
+      'EHS: Unexpected error, Check server logs',
     );
   }
 }

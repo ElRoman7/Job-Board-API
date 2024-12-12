@@ -13,12 +13,6 @@ export class RecruitersController {
     return this.recruitersService.create(createRecruiterDto, createUserDto);
   }
 
-
-  // @Post()
-  // upgradeUserToRecruiter(@Body() createRecruiterDto: CreateRecruiterDto) {
-  //   return this.recruitersService.updateUserToRecruiter(createRecruiterDto);
-  // }
-
   @Get()
   findAll() {
     return this.recruitersService.findAll();
@@ -26,7 +20,7 @@ export class RecruitersController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.recruitersService.findOne(id);
+    return this.recruitersService.findRecruiterWithRelations(id);
   }
 
   @Patch(':id')
@@ -44,11 +38,11 @@ export class RecruitersController {
 
   //ToDo: upgradeUserToRecruiter (funcion para que un usuario se convierta en reclutador)
 
-  // @Post(':recruiterId/companies/:companyId')
-  // async addRecruiterToCompany(
-  //   @Param('userId', ParseUUIDPipe) userId: string, 
-  //   @Param('companyId', ParseUUIDPipe) companyId: string 
-  // ){
-  //   return this.recruitersService.
-  // }
+  @Post(':recruiterId/companies/:companyId')
+  async addRecruiterToCompany(
+    @Param('recruiterId', ParseUUIDPipe) recruiterId: string, 
+    @Param('companyId', ParseUUIDPipe) companyId: string 
+  ){
+    return this.recruitersService.addRecruiterToCompany(recruiterId,companyId)
+  }
 }
