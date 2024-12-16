@@ -11,6 +11,7 @@ import { CreateUserDto } from '../users/dto/create-user.dto';
 import { executeWithTransaction } from 'src/common/utils/query-runner.util';
 import { User } from 'src/users/entities/user.entity';
 import { CompaniesService } from 'src/companies/companies.service';
+import { Company } from 'src/companies/entities/company.entity';
 
 @Injectable()
 export class RecruitersService {
@@ -82,6 +83,14 @@ export class RecruitersService {
     return recruiter;
   }
 
+  async findOneByUserId(id: string) {
+    const recruiter = await this.recruitersRepository.findOne({
+      where: {user_id: id}
+    })
+    if(!recruiter) throw new NotFoundException(`Recruiter with id ${id} not found`)
+    return recruiter;
+  }
+
   async update(id: string, updateRecruiterDto: UpdateRecruiterDto) {
     const recruiter = await this.recruitersRepository.preload({
       id,
@@ -122,5 +131,15 @@ export class RecruitersService {
 
     recruiter.companies.push(company);
     return this.recruitersRepository.save(recruiter);
+  }
+
+  async getCompaniesForRecruiter(recruiterId: string): Promise<Company[]> {
+    const recruiter = await this.recruitersRepository.findOne({
+      where: { id: recruiterId },
+      relations: ['companies'], // Asegúrate de cargar la relación 'companies'
+    });
+    if (!recruiter) throw new NotFoundException(`Recruiter with id ${recruiterId} not found`);
+
+    return recruiter.companies;
   }
 }

@@ -36,7 +36,7 @@ export class RecruitersController {
     return this.recruitersService.remove(+id);
   }
 
-  //ToDo: upgradeUserToRecruiter (funcion para que un usuario se convierta en reclutador)
+  //: upgradeUserToRecruiter (funcion para que un usuario se convierta en reclutador)
 
   @Post(':recruiterId/companies/:companyId')
   async addRecruiterToCompany(

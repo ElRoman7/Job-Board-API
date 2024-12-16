@@ -1,4 +1,5 @@
-import { User } from '../../users/entities/user.entity';
+import { Company } from 'src/companies/entities/company.entity';
+import { Recruiter } from 'src/recruiters/entities/recruiter.entity';
 import { Column, Entity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne } from 'typeorm';
 
 @Entity('offers')
@@ -15,11 +16,13 @@ export class Offer {
     @Column({ type: 'varchar' })
     status: 'draft' | 'published' | 'closed';
 
-    //ToDo: Relacion con el id de la empresa
+    @ManyToOne(() => Company, (company) => company.offer, {eager: true})
+    company: Company
+
     //ToDo: Categorizar
     // Relaciones con un reclutador (Creador de la Oferta)
-    @ManyToOne(() => User, (user) => user.offer, {eager: true})
-    user: User
+    @ManyToOne(() => Recruiter, (recruiter) => recruiter.offer, {eager: true})
+    recruiter: Recruiter
 
     @CreateDateColumn({ type: 'timestamp' })
     created_at: Date;

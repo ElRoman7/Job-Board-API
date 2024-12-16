@@ -1,6 +1,7 @@
 import { Company } from "src/companies/entities/company.entity";
 import { User } from "../../users/entities/user.entity";
-import { Column, DeleteDateColumn, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, PrimaryGeneratedColumn, Unique } from "typeorm";
+import { Column, DeleteDateColumn, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn, Unique } from "typeorm";
+import { Offer } from "src/offers/entities/offer.entity";
 
 @Entity('recruiters')
 @Unique(['user_id']) // Esto asegura que user_id sea único en la tabla
@@ -27,6 +28,10 @@ export class Recruiter {
     @ManyToMany(() => Company)
     @JoinTable()  // Esto crea una tabla intermedia que gestiona la relación
     companies: Company[];
+
+    //* Relacion con El Usuario(Reclutador o empresa) creador de la oferta
+    @OneToMany(() => Offer, (offer) => offer.recruiter)
+    offer: Offer;
 
     @DeleteDateColumn({ nullable: true })
     deletedAt?: Date; // Se llena cuando el registro es "eliminado"

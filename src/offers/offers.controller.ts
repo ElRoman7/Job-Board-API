@@ -1,12 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe, Query } from '@nestjs/common';
 import { OffersService } from './offers.service';
 import { CreateOfferDto } from './dto/create-offer.dto';
 import { UpdateOfferDto } from './dto/update-offer.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Offer } from './entities/offer.entity';
 import { Repository } from 'typeorm';
-import { Auth } from '../auth/decorators';
+import { Auth, GetUser } from '../auth/decorators';
 import { ValidRoles } from '../users/interfaces/valid-roles';
+import { User } from 'src/users/entities/user.entity';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Controller('offers')
 export class OffersController {
@@ -18,18 +20,24 @@ export class OffersController {
 
   @Auth(ValidRoles.recruiter, ValidRoles.company)
   @Post()
-  create(@Body() createOfferDto: CreateOfferDto) {
-    return this.offersService.create(createOfferDto);
+  create(@Body() createOfferDto: CreateOfferDto, @GetUser() user: User) {
+    return this.offersService.create(createOfferDto, user.id);
   }
-
+  
   @Get()
-  findAll() {
-    return this.offersService.findAll();
+  findAll(@Query() paginationDto: PaginationDto) {
+    return this.offersService.findAll(paginationDto);
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.offersService.findOne(+id);
+  }
+
+  @Auth(ValidRoles.recruiter, ValidRoles.company)
+  @Get('/company/:id')
+  findAllByCompany(@Param('id', ParseUUIDPipe) companyId: string){
+    return companyId;
   }
 
   @Patch(':id')

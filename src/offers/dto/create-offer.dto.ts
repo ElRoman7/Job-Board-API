@@ -1,4 +1,5 @@
-import { IsDate, IsString, MinLength } from "class-validator";
+import { IsEnum, IsString, IsUUID, MinLength } from "class-validator";
+import { OfferStatus } from "../interfaces/valid-status";
 
 export class CreateOfferDto {
     @IsString()
@@ -10,11 +11,10 @@ export class CreateOfferDto {
     description: string;
 
     @IsString()
-    status: 'draft' | 'published' | 'closed';
+    @IsEnum(OfferStatus)
+    status: OfferStatus;
 
-    @IsDate()
-    created_at: Date;
-
-    updated_at?: Date;
+    @IsUUID()
+    companyId: string;
 
 }

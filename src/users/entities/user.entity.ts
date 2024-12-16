@@ -1,5 +1,4 @@
-import { Offer } from "../../offers/entities/offer.entity";
-import { BeforeInsert, BeforeUpdate, Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { BeforeInsert, BeforeUpdate, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity('users')
 export class User{
@@ -34,9 +33,7 @@ export class User{
     @Column({ type: 'timestamp', nullable: true, onUpdate: 'CURRENT_TIMESTAMP' })
     updated_at: Date;
     
-    //* Relacion con El Usuario(Reclutador o empresa) creador de la oferta
-    @OneToMany(() => Offer, (offer) => offer.user)
-    offer: Offer;
+
 
     // ToDo: RFC
     
