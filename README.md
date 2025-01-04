@@ -19,13 +19,13 @@ $ yarn install
 $ npm i -g @nestjs/cli
 ```
 
-4. Levantar la Base de Datos (Usando Docker)
+4. Clonar el archivo **.env_template** y renombrar la copia a **.env**
+
+5. Levantar la Base de Datos (Usando Docker)
 
 ```
 $ docker-compose up -d
 ```
-
-5. Clonar el archivo **.env_template** y renombrar la copia a **.env**
 
 6. Llenar las variables de entorno definidas en el **.env**
 
