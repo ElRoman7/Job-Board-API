@@ -3,8 +3,8 @@ import { CreateOfferDto } from './dto/create-offer.dto';
 import { UpdateOfferDto } from './dto/update-offer.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CompaniesService } from 'src/companies/companies.service';
-import { RecruitersService } from 'src/recruiters/recruiters.service';
+import { CompaniesService } from 'src/company-details/companies.service';
+import { RecruitersService } from 'src/recruiter-details/recruiters.service';
 import { Offer } from './entities/offer.entity';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 

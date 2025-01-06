@@ -5,7 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Recruiter } from './entities/recruiter.entity';
 import { UsersModule } from 'src/users/users.module';
 import { CommonModule } from 'src/common/common.module';
-import { CompaniesModule } from 'src/companies/companies.module';
+import { CompaniesModule } from 'src/company-details/companies.module';
 
 @Module({
   controllers: [RecruitersController],

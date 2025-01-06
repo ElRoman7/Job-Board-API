@@ -1,4 +1,4 @@
-import { Recruiter } from "src/recruiters/entities/recruiter.entity";
+import { Recruiter } from "src/recruiter-details/entities/recruiter.entity";
 import { User } from "../../users/entities/user.entity";
 import { ManyToOne, JoinColumn, PrimaryGeneratedColumn, Column, ManyToMany, Entity, Unique, OneToMany } from "typeorm";
 import { Offer } from "src/offers/entities/offer.entity";

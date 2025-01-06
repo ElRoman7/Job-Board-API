@@ -10,8 +10,8 @@ import { ValidRoles } from 'src/users/interfaces/valid-roles';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { executeWithTransaction } from 'src/common/utils/query-runner.util';
 import { User } from 'src/users/entities/user.entity';
-import { CompaniesService } from 'src/companies/companies.service';
-import { Company } from 'src/companies/entities/company.entity';
+import { CompaniesService } from 'src/company-details/companies.service';
+import { Company } from 'src/company-details/entities/company.entity';
 
 @Injectable()
 export class RecruitersService {

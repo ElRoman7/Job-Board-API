@@ -1,4 +1,4 @@
-import { Company } from "src/companies/entities/company.entity";
+import { Company } from "src/company-details/entities/company.entity";
 import { User } from "../../users/entities/user.entity";
 import { Column, DeleteDateColumn, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn, Unique } from "typeorm";
 import { Offer } from "src/offers/entities/offer.entity";

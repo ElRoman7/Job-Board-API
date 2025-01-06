@@ -4,8 +4,8 @@ import { OffersController } from './offers.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Offer } from './entities/offer.entity';
 import { AuthModule } from '../auth/auth.module';
-import { RecruitersModule } from 'src/recruiters/recruiters.module';
-import { CompaniesModule } from 'src/companies/companies.module';
+import { RecruitersModule } from 'src/recruiter-details/recruiters.module';
+import { CompaniesModule } from 'src/company-details/companies.module';
 
 @Module({
   controllers: [OffersController],
