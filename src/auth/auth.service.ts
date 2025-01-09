@@ -27,7 +27,7 @@ export class AuthService {
     return {
       id: user.id,
       email: user.email,
-      fullname: user.fullname,
+      fullname: user.name,
       phoneNumber: user.phoneNumber,
       roles: user.roles,
       is_active: user.is_active,

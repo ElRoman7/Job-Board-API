@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
@@ -6,19 +6,32 @@ import { DataSource, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt'
 import { ErrorHandlerService } from '../common/error-handler.service';
 import { executeWithTransaction } from 'src/common/utils/query-runner.util';
+import { MailService } from 'src/mail/mail.service';
+import { EncoderService } from 'src/common/encoder.service';
+import { ActivateUserDto } from './dto/activate-user.dto';
+import { ValidRoles } from './interfaces/valid-roles';
 @Injectable()
 export class UsersService {
   constructor(
     private readonly errorHandlerService : ErrorHandlerService,
     @InjectRepository(User) private readonly usersRepository : Repository<User>,
     private readonly dataSource: DataSource,
+    private readonly mailService: MailService,
+    private encoderService: EncoderService
   ) {}
   
   async create(createUserDto: CreateUserDto): Promise<User> {
     try {
       return await executeWithTransaction(this.dataSource, async (queryRunner) => {
         const user = await this.prepareUserForTransaction(createUserDto);
+        user.roles = [ValidRoles.candidate]
         await queryRunner.manager.save(user);
+        // Maneja el envío del correo de confirmación
+        try {
+          await this.mailService.sendUserConfirmation(user);  // Usa await para esperar a que el correo se envíe
+        } catch (e) {
+          throw new Error(`User creation failed: Unable to send confirmation email ${e}`);
+        }
         return user;
       });
     } catch (error) {
@@ -32,17 +45,39 @@ export class UsersService {
       ...rest,
       password: bcrypt.hashSync(password, 10),
     });
+    user.activationToken = await this.encoderService.generateToken();
+    
     return user;
   }
 
   async finOneByEmail(email: string): Promise<User> {
-    const user: User = await this.usersRepository.findOneBy({email})
+    const user: User = await this.usersRepository.findOne({
+      where: { email },
+      select: ['id','email','name','password', 'roles', 'phoneNumber' ,'is_active']
+    })
     return user;
   }
 
   async findOneById(id: string): Promise<User> {
     const user: User = await this.usersRepository.findOneBy({id})
     return user;
+  }
+
+  async activateUser(activateUserDto: ActivateUserDto){
+    const { activationToken } = activateUserDto;
+    const user = await this.usersRepository.findOneBy({activationToken})
+
+    if(!user){
+      throw new BadRequestException('Invalid or expired token')
+    }
+
+    user.is_active = true;
+    user.activationToken = null;
+    await this.usersRepository.save(user);
+
+    return {
+      message: 'Account actived successfully'
+    }
   }
 
   // findAll() {

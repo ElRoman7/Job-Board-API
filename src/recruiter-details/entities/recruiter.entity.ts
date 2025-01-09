@@ -3,7 +3,7 @@ import { User } from "../../users/entities/user.entity";
 import { Column, DeleteDateColumn, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn, Unique } from "typeorm";
 import { Offer } from "src/offers/entities/offer.entity";
 
-@Entity('recruiters')
+@Entity('recruiter_details')
 @Unique(['user_id']) // Esto asegura que user_id sea único en la tabla
 export class Recruiter {
     @PrimaryGeneratedColumn('uuid')
@@ -26,7 +26,9 @@ export class Recruiter {
     user: User;
 
     @ManyToMany(() => Company)
-    @JoinTable()  // Esto crea una tabla intermedia que gestiona la relación
+    @JoinTable({
+        name: 'recruiters_companies'
+    })  // Esto crea una tabla intermedia que gestiona la relación
     companies: Company[];
 
     //* Relacion con El Usuario(Reclutador o empresa) creador de la oferta
