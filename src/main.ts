@@ -10,6 +10,8 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
     }),
   );
+  app.enableCors();
+  
   const port = process.env.PORT || 3000;
   await app.listen(port);
 }
