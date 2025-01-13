@@ -3,6 +3,9 @@ import { RecruitersService } from './recruiters.service';
 import { CreateRecruiterDto } from './dto/create-recruiter.dto';
 import { UpdateRecruiterDto } from './dto/update-recruiter.dto';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
+import { Auth, GetUser } from 'src/auth/decorators';
+import { ValidRoles } from 'src/users/interfaces/valid-roles';
+import { User } from 'src/users/entities/user.entity';
 
 @Controller('recruiters')
 export class RecruitersController {
@@ -37,12 +40,12 @@ export class RecruitersController {
   }
 
   //: upgradeUserToRecruiter (funcion para que un usuario se convierta en reclutador)
-
-  @Post(':recruiterId/companies/:companyId')
+  @Auth(ValidRoles.company)
+  @Post(':recruiterId')
   async addRecruiterToCompany(
-    @Param('recruiterId', ParseUUIDPipe) recruiterId: string, 
-    @Param('companyId', ParseUUIDPipe) companyId: string 
+    @Param('recruiterId', ParseUUIDPipe,) recruiterId: string, 
+    @GetUser() user: User
   ){
-    return this.recruitersService.addRecruiterToCompany(recruiterId,companyId)
+    return this.recruitersService.addRecruiterToCompany(recruiterId, user)
   }
 }

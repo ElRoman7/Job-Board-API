@@ -17,7 +17,7 @@ export class UsersService {
     @InjectRepository(User) private readonly usersRepository : Repository<User>,
     private readonly dataSource: DataSource,
     private readonly mailService: MailService,
-    private encoderService: EncoderService
+    private encoderService: EncoderService,
   ) {}
   
   async create(createUserDto: CreateUserDto): Promise<User> {
@@ -78,6 +78,13 @@ export class UsersService {
     return {
       message: 'Account actived successfully'
     }
+  }
+
+  async getUserDetails(user : User){
+    if(user.roles.includes(ValidRoles.company)){
+      
+    }
+
   }
 
   // findAll() {

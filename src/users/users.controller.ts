@@ -18,6 +18,7 @@ export class UsersController {
     return this.usersService.activateUser(activateUserDto)
   }
 
+
   // @Patch('change-password')
   // @UseGuards(AuthGuard())
   // changePassword( @Body() changePasswordDto: ChangePasswordDto, @GetUser() user: User ): Promise<void> {

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateRecruiterDto } from './dto/create-recruiter.dto';
 import { UpdateRecruiterDto } from './dto/update-recruiter.dto';
 import { UsersService } from 'src/users/users.service';
@@ -101,12 +101,13 @@ export class RecruitersService {
     return recruiter;
   }
 
-  async addRecruiterToCompany(recruiterId: string, companyId: string): Promise<Recruiter> {
+  async addRecruiterToCompany(recruiterId: string, user: User): Promise<Recruiter> {
     const recruiter = await this.findRecruiterWithRelations(recruiterId)
     if (!recruiter) throw new NotFoundException(`Recruiter with id ${recruiterId} not found`);
-
-    const company = await this.companiesService.findOne(companyId)
-    if (!company) throw new NotFoundException(`Company with id ${companyId} not found`);
+    if(!user.roles.includes(ValidRoles.company)){
+      throw new ForbiddenException(`User does not have the necessary role`);
+    }
+    const company = await this.companiesService.findCompanyWithUser(user.id)
 
     recruiter.companies.push(company);
     return this.recruitersRepository.save(recruiter);
