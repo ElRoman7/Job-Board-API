@@ -10,6 +10,7 @@ import { MailService } from 'src/mail/mail.service';
 import { EncoderService } from 'src/common/encoder.service';
 import { ActivateUserDto } from './dto/activate-user.dto';
 import { ValidRoles } from './interfaces/valid-roles';
+import { UpdateUserDto } from './dto/update-user.dto';
 @Injectable()
 export class UsersService {
   constructor(
@@ -85,6 +86,24 @@ export class UsersService {
       
     }
 
+  }
+
+  async updateUser(updateUserDto: UpdateUserDto, id: string){
+    const user = await this.usersRepository.findOneBy({id});
+    if(!user){
+      throw new BadRequestException('User not found')
+    }
+    await this.usersRepository.update(id, updateUserDto);
+    return {
+      message: 'User updated successfully'
+    }
+  }
+
+  async updateProfileImageUrl(url: string, id: string){
+    await this.usersRepository.update(id, {profileImageUrl: url});
+    return {
+      message: 'Profile image updated successfully'
+    }
   }
 
   // findAll() {

@@ -24,4 +24,8 @@ export class CreateUserDto {
     @Length(10, 15, { message: 'El número debe tener entre 10 y 15 caracteres' })
     phoneNumber?: string;
 
+    @IsOptional()
+    @IsString()
+    profileImageUrl?: string;
+
 }

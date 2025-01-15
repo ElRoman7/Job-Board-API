@@ -24,6 +24,9 @@ export class User{
         default: ['candidate']
     }) //? Guarda los roles como un array de strings
     roles: string[];
+
+    @Column({ nullable: true })
+    profileImageUrl: string; // Nueva propiedad para almacenar la URL de la imagen de perfil
   
     @Column({ type: 'boolean',  default: true })
     is_active: boolean;

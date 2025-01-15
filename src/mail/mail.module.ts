@@ -32,7 +32,6 @@ import { join } from 'path';
       inject: [ConfigService],
     }),
   ],
-  controllers: [],
   providers: [MailService],
   exports:[MailService]
 })
