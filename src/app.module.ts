@@ -8,7 +8,6 @@ import { ApplicationsModule } from 'src/job-applications/applications.module';
 import { AuthModule } from 'src/auth/auth.module';
 import { UsersModule } from 'src/users/users.module';
 import { MailModule } from 'src/mail/mail.module';
-import { FilesModule } from 'src/files/files.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 
 @Module({
@@ -38,9 +37,7 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
     AuthModule,
     UsersModule,
     MailModule,
-    FilesModule,
     CloudinaryModule,
-    
   ],
 })
 export class AppModule {}
