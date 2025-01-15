@@ -100,7 +100,7 @@ export class UsersService {
   }
 
   async updateProfileImageUrl(url: string, id: string){
-    await this.usersRepository.update(id, {profileImageUrl: url});
+    await this.updateUser({profileImageUrl: url}, id);
     return {
       message: 'Profile image updated successfully'
     }

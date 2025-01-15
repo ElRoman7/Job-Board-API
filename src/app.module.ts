@@ -9,6 +9,7 @@ import { AuthModule } from 'src/auth/auth.module';
 import { UsersModule } from 'src/users/users.module';
 import { MailModule } from 'src/mail/mail.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
+import { CandidateModule } from './candidate-details/candidate.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
     UsersModule,
     MailModule,
     CloudinaryModule,
+    CandidateModule,
   ],
 })
 export class AppModule {}
