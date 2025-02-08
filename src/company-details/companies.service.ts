@@ -67,6 +67,14 @@ export class CompaniesService {
     return this.sanitizeUserForCompany(company);
   }
 
+  async findOneByUserId(id: string) : Promise<Company>{
+    const company = await this.companyRepository.findOne({
+      where: {user_id: id},
+      relations: ['user']
+    });
+    return this.sanitizeUserForCompany(company);
+  }
+
   update(id: number, updateCompanyDto: UpdateCompanyDto) {
     return `This action updates a #${id} company`;
   }

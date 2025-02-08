@@ -21,7 +21,7 @@ export class Offer {
 
     //ToDo: Categorizar
     // Relaciones con un reclutador (Creador de la Oferta)
-    @ManyToOne(() => Recruiter, (recruiter) => recruiter.offer, {eager: true})
+    @ManyToOne(() => Recruiter, (recruiter) => recruiter.offer, {eager: true, nullable: true})
     recruiter: Recruiter
 
     @CreateDateColumn({ type: 'timestamp' })

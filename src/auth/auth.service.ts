@@ -23,7 +23,8 @@ export class AuthService {
     if (!bcrypt.compareSync(password, user.password)) {
       throw new UnauthorizedException('Invalid credentials (password)');
     }
-    
+    const token = this.getJwt({id: user.id})
+
     return {
       id: user.id,
       email: user.email,
@@ -31,7 +32,7 @@ export class AuthService {
       phoneNumber: user.phoneNumber,
       roles: user.roles,
       is_active: user.is_active,
-      token: this.getJwt({id: user.id})
+      token
     };
   }
 

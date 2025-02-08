@@ -40,9 +40,10 @@ export class OffersController {
     return companyId;
   }
 
+  @Auth(ValidRoles.recruiter, ValidRoles.company)
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateOfferDto: UpdateOfferDto) {
-    return this.offersService.update(+id, updateOfferDto);
+  update(@Param('id', ParseUUIDPipe) id: string, @Body() updateOfferDto: UpdateOfferDto, @GetUser() user: User) {
+    return this.offersService.update(id, updateOfferDto, user);
   }
 
   @Delete(':id')

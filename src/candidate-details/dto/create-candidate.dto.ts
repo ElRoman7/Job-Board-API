@@ -15,4 +15,7 @@ export class CreateCandidateDto {
     @IsString()
     @IsUrl()
     portfolioUrl?: string;
+
+    //TODO
+    //"aptitudes": string[],
 }

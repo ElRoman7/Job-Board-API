@@ -66,7 +66,7 @@ export class RecruitersService {
     const recruiter = await this.recruitersRepository.findOne({
       where: {user_id: id}
     })
-    if(!recruiter) throw new NotFoundException(`Recruiter with id ${id} not found`)
+    // if(!recruiter) throw new NotFoundException(`Recruiter with id ${id} not found`)
     return recruiter;
   }
 
@@ -85,7 +85,6 @@ export class RecruitersService {
         this.errorHandlerService.handleDBException(error);
       }
     });
-
   }
 
   remove(id: number) {
