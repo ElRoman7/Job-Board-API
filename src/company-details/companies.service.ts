@@ -10,6 +10,7 @@ import { ValidRoles } from 'src/users/interfaces/valid-roles';
 import { ErrorHandlerService } from 'src/common/error-handler.service';
 import { User } from 'src/users/entities/user.entity';
 import { executeWithTransaction } from 'src/common/utils/query-runner.util';
+import { MailService } from 'src/mail/mail.service';
 
 @Injectable()
 export class CompaniesService {
@@ -19,7 +20,8 @@ export class CompaniesService {
     private readonly companyRepository : Repository<Company>,
     private readonly usersService: UsersService,
     private readonly errorHandlerService: ErrorHandlerService,
-    private readonly dataSource: DataSource
+    private readonly dataSource: DataSource,
+    private readonly mailService: MailService
   ){}  
 
   async create(createCompanyDto: CreateCompanyDto, createUserDto: CreateUserDto): Promise<Company> {
@@ -30,6 +32,11 @@ export class CompaniesService {
         await queryRunner.manager.save(user)
         const company = await this.prepareCompanyForTransaction(createCompanyDto, user);
         await queryRunner.manager.save(company)
+        try {
+          await this.mailService.sendUserConfirmation(user);  // Usa await para esperar a que el correo se envíe
+        } catch (e) {
+          throw new Error(`User creation failed: Unable to send confirmation email ${e}`);
+        }
 
         return this.sanitizeUserForCompany(company)
       } catch (error) {

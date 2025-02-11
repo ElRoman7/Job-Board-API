@@ -9,6 +9,7 @@ import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { ValidRoles } from 'src/users/interfaces/valid-roles';
 import { User } from 'src/users/entities/user.entity';
 import { ErrorHandlerService } from 'src/common/error-handler.service';
+import { MailService } from 'src/mail/mail.service';
 
 @Injectable()
 export class CandidateService {
@@ -17,7 +18,8 @@ export class CandidateService {
     @InjectRepository(Candidate) private readonly candidateRepository: Repository<Candidate> ,
     private readonly usersService: UsersService,
     private readonly dataSource: DataSource,
-    private readonly errrorHandlerService: ErrorHandlerService
+    private readonly errrorHandlerService: ErrorHandlerService,
+    private readonly mailService: MailService
   ){}
 
   async create(createCandidateDto: CreateCandidateDto, createUserDto: CreateUserDto): Promise<Candidate> {
@@ -29,6 +31,13 @@ export class CandidateService {
 
         const candidate = await this.prepareCandidateForTransaction(createCandidateDto, user);
         await queryRunner.manager.save(candidate);
+        // Maneja el envío del correo de confirmación
+        try {
+          await this.mailService.sendUserConfirmation(user);  // Usa await para esperar a que el correo se envíe
+        } catch (e) {
+          throw new Error(`User creation failed: Unable to send confirmation email ${e}`);
+        }
+
         return candidate;
       } catch (error) {
         this.errrorHandlerService.handleDBException(error); 

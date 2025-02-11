@@ -12,6 +12,7 @@ import { executeWithTransaction } from 'src/common/utils/query-runner.util';
 import { User } from 'src/users/entities/user.entity';
 import { CompaniesService } from 'src/company-details/companies.service';
 import { Company } from 'src/company-details/entities/company.entity';
+import { MailService } from 'src/mail/mail.service';
 
 @Injectable()
 export class RecruitersService {
@@ -21,7 +22,8 @@ export class RecruitersService {
     @InjectRepository(Recruiter)
     private readonly recruitersRepository : Repository<Recruiter>,
     private readonly dataSource: DataSource,
-    private readonly companiesService: CompaniesService
+    private readonly companiesService: CompaniesService,
+    private readonly mailService: MailService
   ){}
 
   async create(createRecruiterDto: CreateRecruiterDto, createUserDto: CreateUserDto): Promise<Recruiter> {
@@ -34,6 +36,11 @@ export class RecruitersService {
         // Transaccion del Recruiter
         const recruiter = await this.prepareRecruiterForTransaction(createRecruiterDto, user)
         await queryRunner.manager.save(recruiter);
+        try {
+          await this.mailService.sendUserConfirmation(user);  // Usa await para esperar a que el correo se envíe
+        } catch (e) {
+          throw new Error(`User creation failed: Unable to send confirmation email ${e}`);
+        }
       
         return recruiter
       } catch (error) {
