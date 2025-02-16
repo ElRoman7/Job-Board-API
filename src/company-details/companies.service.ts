@@ -90,6 +90,15 @@ export class CompaniesService {
     return `This action removes a #${id} company`;
   }
 
+  async findCompanyById(id: string): Promise<Company>{
+    const company = await this.companyRepository.findOne({
+      where: {id},
+      relations: ['user']
+    })
+    if(!company) throw new NotFoundException(`Company with user id ${id} not found`)
+    return company;
+  }
+
   async findCompanyWithUser(id:string): Promise<Company>{
     const company = await this.companyRepository.findOne({
       where: {user_id : id},

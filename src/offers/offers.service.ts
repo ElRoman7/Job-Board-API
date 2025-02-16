@@ -64,12 +64,20 @@ export class OffersService {
       take: limit,
       skip: offset,
       relations: {
-        company: true,
-        recruiter: true
+        company: {
+          user: true
+        },
+        recruiter: {
+          user: true
+        }
       }
     })
+    const total = await this.countAll();
+    return { offers, total }
+  }
 
-    return offers;
+  async countAll() {
+    return this.offerRepository.count();
   }
   //ToDo:
   findOne(id: number) {
