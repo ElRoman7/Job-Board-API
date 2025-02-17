@@ -58,13 +58,15 @@ export class UsersService {
   async finOneByEmail(email: string): Promise<User> {
     const user: User = await this.usersRepository.findOne({
       where: { email },
-      select: ['email','password']
+      select: ['id','email','password']
     })
     return user;
   }
 
   async findOneById(id: string): Promise<User> {
-    const user: User = await this.usersRepository.findOneBy({id})
+    const user: User = await this.usersRepository.findOne({
+      where: { id }
+    })
     return user;
   }
 
