@@ -22,7 +22,7 @@ export class CompaniesController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.companiesService.findCompanyWithUser(id);
+    return this.companiesService.findCompanyById(id);
   }
 
   @Patch(':id')

@@ -1,5 +1,5 @@
-import { Company } from 'src/companies/entities/company.entity';
-import { Recruiter } from 'src/recruiters/entities/recruiter.entity';
+import { Company } from 'src/company-details/entities/company.entity';
+import { Recruiter } from 'src/recruiter-details/entities/recruiter.entity';
 import { Column, Entity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne } from 'typeorm';
 
 @Entity('offers')
@@ -21,7 +21,7 @@ export class Offer {
 
     //ToDo: Categorizar
     // Relaciones con un reclutador (Creador de la Oferta)
-    @ManyToOne(() => Recruiter, (recruiter) => recruiter.offer, {eager: true})
+    @ManyToOne(() => Recruiter, (recruiter) => recruiter.offer, {eager: true, nullable: true})
     recruiter: Recruiter
 
     @CreateDateColumn({ type: 'timestamp' })

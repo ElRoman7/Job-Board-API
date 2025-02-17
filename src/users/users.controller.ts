@@ -1,6 +1,10 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Get, Query, Patch, Param} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
+import { ActivateUserDto } from './dto/activate-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { Auth } from 'src/auth/decorators';
+import { ValidRoles } from './interfaces/valid-roles';
 
 @Controller('users')
 export class UsersController {
@@ -11,23 +15,14 @@ export class UsersController {
     return this.usersService.create(createUserDto);
   }
 
-  // @Get()
-  // findAll() {
-  //   return this.usersService.findAll();
-  // }
+  @Get('activate')
+  activateAccount(@Query() activateUserDto: ActivateUserDto) {
+    return this.usersService.activateUser(activateUserDto)
+  }
 
-  // @Get(':id')
-  // findOne(@Param('id') id: string) {
-  //   return this.usersService.findOne(+id);
-  // }
-
-  // @Patch(':id')
-  // update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-  //   return this.usersService.update(+id, updateUserDto);
-  // }
-
-  // @Delete(':id')
-  // remove(@Param('id') id: string) {
-  //   return this.usersService.remove(+id);
-  // }
+  @Auth(ValidRoles.candidate, ValidRoles.company, ValidRoles.recruiter)
+  @Patch('update/:id')
+  updateAccount(@Body() updateUserDto: UpdateUserDto, @Param('id') id: string) {
+    return this.usersService.updateUser(updateUserDto, id)
+  }
 }

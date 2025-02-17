@@ -1,5 +1,4 @@
-import { ArrayUnique, IsEmail, IsEnum, IsOptional, IsPhoneNumber, IsString, Length, Matches, MaxLength, MinLength } from "class-validator";
-import { ValidRoles } from "../interfaces/valid-roles";
+import { IsEmail, IsOptional, IsPhoneNumber, IsString, Length, Matches, MaxLength, MinLength } from "class-validator";
 
 export class CreateUserDto {
 
@@ -18,7 +17,7 @@ export class CreateUserDto {
     @IsString()
     @MinLength(2)
     @MaxLength(70)
-    fullname: string;
+    name: string;
 
     @IsOptional()
     @IsPhoneNumber('MX', { message: 'El número debe ser válido para México' })
@@ -26,8 +25,7 @@ export class CreateUserDto {
     phoneNumber?: string;
 
     @IsOptional()
-    @IsEnum(ValidRoles, { each: true, message: 'Each role must be a valid role: candidate, recruiter or company' })
-    @ArrayUnique({ message: 'Roles must be unique' })
-    roles?: string[];
+    @IsString()
+    profileImageUrl?: string;
 
 }

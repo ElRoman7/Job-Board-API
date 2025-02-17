@@ -1,9 +1,9 @@
-import { Recruiter } from "src/recruiters/entities/recruiter.entity";
+import { Recruiter } from "src/recruiter-details/entities/recruiter.entity";
 import { User } from "../../users/entities/user.entity";
 import { ManyToOne, JoinColumn, PrimaryGeneratedColumn, Column, ManyToMany, Entity, Unique, OneToMany } from "typeorm";
 import { Offer } from "src/offers/entities/offer.entity";
 
-@Entity('companies')
+@Entity('company_details')
 @Unique(['user_id']) // Esto asegura que user_id sea único en la tabla
 export class Company {
     @PrimaryGeneratedColumn('uuid')

@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   InternalServerErrorException,
   Logger,
@@ -13,7 +14,7 @@ export class ErrorHandlerService {
 
   handleDBException(error: any) {
     if (error.code === this.dbErrors.UNIQUE_CONSTRAIN)
-      throw new BadRequestException(error.detail);
+      throw new ConflictException(error.detail);
 
     if (error.code === this.dbErrors.NOT_NULL_CONSTRAIN)
       throw new BadRequestException(

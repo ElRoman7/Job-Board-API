@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateRecruiterDto } from './dto/create-recruiter.dto';
 import { UpdateRecruiterDto } from './dto/update-recruiter.dto';
 import { UsersService } from 'src/users/users.service';
@@ -10,8 +10,9 @@ import { ValidRoles } from 'src/users/interfaces/valid-roles';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { executeWithTransaction } from 'src/common/utils/query-runner.util';
 import { User } from 'src/users/entities/user.entity';
-import { CompaniesService } from 'src/companies/companies.service';
-import { Company } from 'src/companies/entities/company.entity';
+import { CompaniesService } from 'src/company-details/companies.service';
+import { Company } from 'src/company-details/entities/company.entity';
+import { MailService } from 'src/mail/mail.service';
 
 @Injectable()
 export class RecruitersService {
@@ -21,23 +22,27 @@ export class RecruitersService {
     @InjectRepository(Recruiter)
     private readonly recruitersRepository : Repository<Recruiter>,
     private readonly dataSource: DataSource,
-    private readonly companiesService: CompaniesService
+    private readonly companiesService: CompaniesService,
+    private readonly mailService: MailService
   ){}
 
   async create(createRecruiterDto: CreateRecruiterDto, createUserDto: CreateUserDto): Promise<Recruiter> {
-    if (!createUserDto.roles.includes(ValidRoles.recruiter)) {
-      throw new UnauthorizedException(`User needs ${ValidRoles.recruiter} role`);
-    }
     return await executeWithTransaction(this.dataSource, async (queryRunner) => {
       try {
         // Transaccion del Usuario
         const user = await this.usersService.prepareUserForTransaction(createUserDto)
+        user.roles = [ValidRoles.recruiter]
         await queryRunner.manager.save(user);
         // Transaccion del Recruiter
         const recruiter = await this.prepareRecruiterForTransaction(createRecruiterDto, user)
         await queryRunner.manager.save(recruiter);
-
-        return recruiter;
+        try {
+          await this.mailService.sendUserConfirmation(user);  // Usa await para esperar a que el correo se envíe
+        } catch (e) {
+          throw new Error(`User creation failed: Unable to send confirmation email ${e}`);
+        }
+      
+        return recruiter
       } catch (error) {
         this.errorHandlerService.handleDBException(error); // Manejo de errores con el ErrorHandler
       }
@@ -51,25 +56,6 @@ export class RecruitersService {
     });
     return recruiter
   }
-
-  // async updateUserToRecruiter(createRecruiterDto: CreateRecruiterDto) {
-  //   const { user_id, ...rest } = createRecruiterDto;
-  //   const user = await this.usersService.findOneById(user_id)
-  //   if(!user) throw new UnauthorizedException('User Id is not valid, user with that id dont exists');
-  //   if(!user.roles.includes(ValidRoles.recruiter)) throw new UnauthorizedException('User must have recruiter rol');
-  //   try {
-  //     const recruiter = this.recruitersRepository.create({
-  //       ...rest,
-  //       user_id
-  //     });
-  //     await this.recruitersRepository.save(recruiter)
-
-  //     return recruiter;
-
-  //   } catch (error) {
-  //     this.errorHandlerService.handleDBException(error)
-  //   }
-  // }
 
   findAll() {
     return `This action returns all recruiters`;
@@ -87,7 +73,7 @@ export class RecruitersService {
     const recruiter = await this.recruitersRepository.findOne({
       where: {user_id: id}
     })
-    if(!recruiter) throw new NotFoundException(`Recruiter with id ${id} not found`)
+    // if(!recruiter) throw new NotFoundException(`Recruiter with id ${id} not found`)
     return recruiter;
   }
 
@@ -106,7 +92,6 @@ export class RecruitersService {
         this.errorHandlerService.handleDBException(error);
       }
     });
-
   }
 
   remove(id: number) {
@@ -122,12 +107,13 @@ export class RecruitersService {
     return recruiter;
   }
 
-  async addRecruiterToCompany(recruiterId: string, companyId: string): Promise<Recruiter> {
+  async addRecruiterToCompany(recruiterId: string, user: User): Promise<Recruiter> {
     const recruiter = await this.findRecruiterWithRelations(recruiterId)
     if (!recruiter) throw new NotFoundException(`Recruiter with id ${recruiterId} not found`);
-
-    const company = await this.companiesService.findOne(companyId)
-    if (!company) throw new NotFoundException(`Company with id ${companyId} not found`);
+    if(!user.roles.includes(ValidRoles.company)){
+      throw new ForbiddenException(`User does not have the necessary role`);
+    }
+    const company = await this.companiesService.findCompanyWithUser(user.id)
 
     recruiter.companies.push(company);
     return this.recruitersRepository.save(recruiter);
