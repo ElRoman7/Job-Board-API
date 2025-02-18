@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  HttpException,
   Injectable,
   InternalServerErrorException,
   Logger,
@@ -13,6 +14,10 @@ export class ErrorHandlerService {
   private readonly dbErrors = DB_ERROR_CODES;
 
   handleDBException(error: any) {
+    if (error instanceof HttpException) {
+      throw error; // Si ya es una excepción de NestJS, la relanzamos
+    }
+    
     if (error.code === this.dbErrors.UNIQUE_CONSTRAIN)
       throw new ConflictException(error.detail);
 

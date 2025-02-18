@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsUUID, IsEmail } from 'class-validator';
+import { IsString, IsOptional, IsEmail } from 'class-validator';
 
 export class CreateCompanyDto {
     @IsString()
@@ -6,13 +6,13 @@ export class CreateCompanyDto {
     address?: string;
 
     @IsString()
-    city?: string;
+    city: string;
 
     @IsString()
-    state?: string;
+    state: string;
 
     @IsString()
-    country?: string;
+    country: string;
 
     @IsOptional()
     @IsString()
@@ -20,9 +20,9 @@ export class CreateCompanyDto {
 
     @IsOptional()
     @IsString()
-    description?: string;
+    description: string;
 
-    // ToDo 
+    // ToDo: Preparar industrias para que sean seleccionadas de un catálogo
     @IsOptional()
     @IsString()
     industry?: string;

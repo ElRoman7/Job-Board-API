@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
@@ -43,7 +43,7 @@ export class UsersService {
   async prepareUserForTransaction(createUserDto: CreateUserDto): Promise<User> {
     const findUser = await this.finOneByEmail(createUserDto.email);
     if(findUser){
-      throw new ConflictException('Email already in use')
+      throw new BadRequestException('Email already in use')
     }
     const { password, ...rest } = createUserDto;
     const user = this.usersRepository.create({
