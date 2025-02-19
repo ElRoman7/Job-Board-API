@@ -9,6 +9,7 @@ import { Offer } from './entities/offer.entity';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { User } from 'src/users/entities/user.entity';
 import { ErrorHandlerService } from 'src/common/error-handler.service';
+import { ModalityType, ContractType, ExperienceLevel, WorkArea, AdditionalBenefit } from './entities/tags.entity';
 
 @Injectable()
 export class OffersService {
@@ -18,63 +19,104 @@ export class OffersService {
     private readonly offerRepository : Repository<Offer>,
     private readonly companiesService: CompaniesService,
     private readonly recruitersService: RecruitersService,
-    private readonly errorHandlerService: ErrorHandlerService
+    private readonly errorHandlerService: ErrorHandlerService,
+    @InjectRepository(ModalityType) 
+    private readonly modalityTypeRepository: Repository<ModalityType>,
+    @InjectRepository(ContractType)
+    private readonly contractTypeRepository: Repository<ContractType>,
+    @InjectRepository(ExperienceLevel)
+    private readonly experienceLevelRepository: Repository<ExperienceLevel>,
+    @InjectRepository(WorkArea)
+    private readonly workAreaRepository: Repository<WorkArea>,
+    @InjectRepository(AdditionalBenefit)
+    private readonly additionalBenefitRepository: Repository<AdditionalBenefit>
 
   ){}
 
   async create(createOfferDto: CreateOfferDto, userId: string) {
-    const { companyId, ...rest } = createOfferDto;
-    const company = await this.companiesService.findOneByUserId(userId);
-    if(company.id != companyId){
-      throw new UnauthorizedException(`Company with id ${companyId} does not match with the company of the user`);
-    }
-    const recruiter = await this.recruitersService.findOneByUserId(userId);
-    console.log(recruiter);
+    const { companyId, modalityTypes, contractTypes, experienceLevels, workAreas, additionalBenefits, ...rest } = createOfferDto;
     
-    //* La oferta está siendo creada por una compañía
-    if (!recruiter) {
-      if (company.id !== companyId) {
+    // Buscar la compañía asociada al usuario
+    const company = await this.companiesService.findOneByUserId(userId);
+    
+    // Validar que el companyId coincida con el de la compañía del usuario
+    if (company.id !== companyId) {
         throw new UnauthorizedException(`Company with id ${companyId} does not match with the company of the user`);
-      }
-      console.log('aqui');
-      
-      const offer = this.offerRepository.create({
-      company,
-      ...rest
-      });
-      return this.offerRepository.save(offer);
     }
+    
+    // Buscar el reclutador asociado al usuario
+    const recruiter = await this.recruitersService.findOneByUserId(userId);
+
+    // Si el reclutador no existe, creamos la oferta solo si es la misma compañía del usuario
+    if (!recruiter) {
+        const offer = this.offerRepository.create({
+            company,
+            modalityTypes,  // Aquí se mapea directamente
+            contractTypes,  // Aquí se mapea directamente
+            experienceLevels, // Aquí se mapea directamente
+            workAreas,  // Aquí se mapea directamente
+            additionalBenefits, // Aquí se mapea directamente
+            ...rest
+        });
+        return this.offerRepository.save(offer);
+    }
+
+    // Si el reclutador existe, verificamos si tiene permisos para crear ofertas para esta compañía
     const companiesForRecruiter = await this.recruitersService.getCompaniesForRecruiter(recruiter.id);
     const hasPermission = companiesForRecruiter.some(company => company.id === companyId);
+    
     if (!hasPermission) {
-      throw new UnauthorizedException(`Recruiter does not have permission to publish offers for company with id ${companyId}`);
+        throw new UnauthorizedException(`Recruiter does not have permission to publish offers for company with id ${companyId}`);
     }
 
-    const offer = this.offerRepository.create({
-      company,
-      recruiter,
-      ...rest
-    })
-    return this.offerRepository.save(offer)
-  }
+    // Mapear las relaciones para asignarlas correctamente a la oferta
+    const modalityInstances = await this.modalityTypeRepository.findByIds(modalityTypes.map(modality => modality.id));
+    const contractInstances = await this.contractTypeRepository.findByIds(contractTypes.map(contract => contract.id));
+    const experienceInstances = await this.experienceLevelRepository.findByIds(experienceLevels.map(experience => experience.id));
+    const workAreaInstances = await this.workAreaRepository.findByIds(workAreas.map(workArea => workArea.id));
+    const additionalBenefitInstances = await this.additionalBenefitRepository.findByIds(additionalBenefits.map(benefit => benefit.id));
 
-  async findAll(paginationDto: PaginationDto) {
-    const { limit = 10, offset = 0 } = paginationDto
-    const offers = await this.offerRepository.find({
+    // Crear la oferta con las relaciones mapeadas
+    const offer = this.offerRepository.create({
+        company,
+        recruiter,
+        modalityTypes: modalityInstances,
+        contractTypes: contractInstances,
+        experienceLevels: experienceInstances,
+        workAreas: workAreaInstances,
+        additionalBenefits: additionalBenefitInstances,
+        ...rest
+    });
+    
+    return this.offerRepository.save(offer);
+}
+
+
+async findAll(paginationDto: PaginationDto) {
+  const { limit = 10, offset = 0 } = paginationDto;
+
+  const offers = await this.offerRepository.find({
       take: limit,
       skip: offset,
       relations: {
-        company: {
-          user: true
-        },
-        recruiter: {
-          user: true
-        }
-      }
-    })
-    const total = await this.countAll();
-    return { offers, total }
-  }
+          company: {
+              user: true, // Relación con usuario de la compañía
+          },
+          recruiter: {
+              user: true, // Relación con usuario del reclutador
+          },
+          modalityTypes: true, // Relación con modalidad de trabajo
+          contractTypes: true, // Relación con tipos de contrato
+          experienceLevels: true, // Relación con niveles de experiencia
+          workAreas: true, // Relación con áreas de trabajo
+          additionalBenefits: true, // Relación con beneficios adicionales
+      },
+  });
+
+  const total = await this.countAll(); // Suponiendo que tienes un método para contar todas las ofertas
+  return { offers, total };
+}
+
 
   async countAll() {
     return this.offerRepository.count();

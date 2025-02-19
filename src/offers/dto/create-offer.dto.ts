@@ -1,5 +1,6 @@
-import { IsEnum, IsString, IsUUID, MinLength } from "class-validator";
+import { IsArray, IsEnum, IsNotEmpty, IsString, IsUUID, MinLength } from "class-validator";
 import { OfferStatus } from "../interfaces/valid-status";
+import { ModalityType, ContractType, ExperienceLevel, WorkArea, AdditionalBenefit } from "../entities/tags.entity";
 
 export class CreateOfferDto {
     @IsString()
@@ -16,5 +17,25 @@ export class CreateOfferDto {
 
     @IsUUID()
     companyId: string;
+
+    @IsArray()
+    @IsNotEmpty()
+    modalityTypes: ModalityType[];
+
+    @IsArray()
+    @IsNotEmpty()
+    contractTypes: ContractType[];
+
+    @IsArray()
+    @IsNotEmpty()
+    experienceLevels: ExperienceLevel[];
+
+    @IsArray()
+    @IsNotEmpty()
+    workAreas: WorkArea[];
+
+    @IsArray()
+    @IsNotEmpty()
+    additionalBenefits: AdditionalBenefit[];
 
 }
