@@ -4,7 +4,10 @@
   "sourceRoot": "src",
   "compilerOptions": {
     "deleteOutDir": true,
-    "assets": ["mail/templates/**/*"],
+    "assets": [
+      "mail/templates/**/*",
+      "company-details/data/industries.json"
+    ],
     "watchAssets": true
   }
 }

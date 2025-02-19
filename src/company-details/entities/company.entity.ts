@@ -1,7 +1,8 @@
 import { Recruiter } from "src/recruiter-details/entities/recruiter.entity";
 import { User } from "../../users/entities/user.entity";
-import { ManyToOne, JoinColumn, PrimaryGeneratedColumn, Column, ManyToMany, Entity, Unique, OneToMany } from "typeorm";
+import { ManyToOne, JoinColumn, PrimaryGeneratedColumn, Column, ManyToMany, Entity, Unique, OneToMany, JoinTable } from "typeorm";
 import { Offer } from "src/offers/entities/offer.entity";
+import { Industry } from "./industry.entity";
 
 @Entity('company_details')
 @Unique(['user_id']) // Esto asegura que user_id sea único en la tabla
@@ -27,8 +28,19 @@ export class Company {
     @Column('text', { nullable: true })
     description: string; // Descripción de la empresa
 
-    @Column('text', { nullable: true })
-    industry: string; // Industria
+    @ManyToMany(() => Industry, (industry) => industry.companies)
+    @JoinTable({
+        name: 'company_industries',
+        joinColumn: {
+            name: 'company_id',
+            referencedColumnName: 'id'
+        },
+        inverseJoinColumn: {
+            name: 'industry_id',
+            referencedColumnName: 'id'
+        }
+    })
+    industries: Industry[];
 
     @Column('text', { nullable: true })
     contact_email: string; // Correo electrónico de contacto

@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsEmail } from 'class-validator';
+import { IsString, IsOptional, IsEmail, IsArray, IsInt } from 'class-validator';
 
 export class CreateCompanyDto {
     @IsString()
@@ -22,10 +22,9 @@ export class CreateCompanyDto {
     @IsString()
     description: string;
 
-    // ToDo: Preparar industrias para que sean seleccionadas de un catálogo
-    @IsOptional()
-    @IsString()
-    industry?: string;
+    @IsArray()
+    @IsInt({ each: true })
+    industries: string[];  // IDs de las industrias a asociar
 
     @IsOptional()
     @IsString()
