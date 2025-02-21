@@ -2,6 +2,7 @@ import { Company } from 'src/company-details/entities/company.entity';
 import { Recruiter } from 'src/recruiter-details/entities/recruiter.entity';
 import { Column, Entity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, ManyToMany } from 'typeorm';
 import { AdditionalBenefit, ContractType, ExperienceLevel, ModalityType, WorkArea } from './tags.entity';
+import { SalaryType } from '../interfaces/valid-salary-type';
 
 @Entity('offers')
 export class Offer {
@@ -45,4 +46,16 @@ export class Offer {
 
     @UpdateDateColumn({ type: 'timestamp', nullable: true })
     updated_at?: Date;
+
+    @Column({ type: 'decimal', nullable: true })
+    salaryMin: number;
+
+    @Column({ type: 'decimal', nullable: true })
+    salaryMax: number;
+
+    @Column({ type: 'varchar', length: 3, default: 'MXN' })
+    currency: string;
+
+    @Column({ type: 'varchar', length: 50, nullable: true })
+    salaryType: SalaryType;
 }

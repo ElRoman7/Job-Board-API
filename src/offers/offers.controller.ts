@@ -29,6 +29,31 @@ export class OffersController {
     return this.offersService.findAll(paginationDto);
   }
 
+  @Get('/modality-types')
+  findAllModalityTypes(){
+    return this.offersService.findAllModalityType();
+  }
+
+  @Get('/contract-types')
+  findAllContractTypes(){
+    return this.offersService.findAllContractType();
+  }
+
+  @Get('/experience-levels')
+  findAllExperienceLevels(){
+    return this.offersService.findAllExperienceLevel();
+  }
+
+  @Get('/work-areas')
+  findAllWorkAreas(){
+    return this.offersService.findAllWorkArea();
+  }
+
+  @Get('/additional-benefits')
+  findAllAdditionalBenefits(){
+    return this.offersService.findAllAdditionalBenefit();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.offersService.findOne(+id);

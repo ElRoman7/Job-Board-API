@@ -1,6 +1,7 @@
-import { IsArray, IsEnum, IsNotEmpty, IsString, IsUUID, MinLength } from "class-validator";
+import { IsArray, IsDecimal, IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID, MinLength } from "class-validator";
 import { OfferStatus } from "../interfaces/valid-status";
 import { ModalityType, ContractType, ExperienceLevel, WorkArea, AdditionalBenefit } from "../entities/tags.entity";
+import { SalaryType } from "../interfaces/valid-salary-type";
 
 export class CreateOfferDto {
     @IsString()
@@ -37,5 +38,20 @@ export class CreateOfferDto {
     @IsArray()
     @IsNotEmpty()
     additionalBenefits: AdditionalBenefit[];
+
+    @IsOptional()
+    @IsDecimal()
+    salaryMin: number;
+
+    @IsOptional()
+    @IsDecimal()
+    salaryMax: number;
+
+    @IsString()
+    currency: string;
+
+    @IsString()
+    @IsEnum(SalaryType)
+    salaryType: SalaryType;
 
 }

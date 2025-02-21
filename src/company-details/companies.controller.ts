@@ -15,15 +15,27 @@ export class CompaniesController {
 
   //ToDo: upgradeUserToCompany (funcion para que un usuario se convierta en company)
 
+  @Get('industries')
+  getIndustries() {
+    return this.companiesService.getIndustries();
+  }
+
   @Get()
   findAll() {
     return this.companiesService.findAll();
   }
 
+  @Get('user/:id')
+  findCompanyByUserId(@Param('id') id: string) {
+    return this.companiesService.findCompanyWithUser(id)  
+  }
+  
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.companiesService.findCompanyById(id);
   }
+
+
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateCompanyDto: UpdateCompanyDto) {
@@ -34,4 +46,5 @@ export class CompaniesController {
   remove(@Param('id') id: string) {
     return this.companiesService.remove(+id);
   }
+
 }

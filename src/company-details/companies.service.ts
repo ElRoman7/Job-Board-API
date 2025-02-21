@@ -113,7 +113,10 @@ export class CompaniesService implements OnModuleInit {
   async findCompanyById(id: string): Promise<Company>{
     const company = await this.companyRepository.findOne({
       where: {id},
-      relations: ['user']
+      relations: {
+        user: true,
+        industries: true
+      }
     })
     if(!company) throw new NotFoundException(`Company with user id ${id} not found`)
     return company;
@@ -122,7 +125,10 @@ export class CompaniesService implements OnModuleInit {
   async findCompanyWithUser(id:string): Promise<Company>{
     const company = await this.companyRepository.findOne({
       where: {user_id : id},
-      relations: ['user']
+      relations: {
+        user: true,
+        industries: true
+      }
     })
     if(!company) throw new NotFoundException(`Company with user id ${id} not found`)
     return company;
@@ -149,5 +155,10 @@ export class CompaniesService implements OnModuleInit {
       } catch (error) {
         console.error('Error al cargar el archivo de industrias:', error);
       }
+    }
+
+    // Método para obtener las industrias
+    async getIndustries(): Promise<Industry[]> {
+      return await this.industryRepository.find();
     }
 }

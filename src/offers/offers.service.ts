@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/
 import { CreateOfferDto } from './dto/create-offer.dto';
 import { UpdateOfferDto } from './dto/update-offer.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { CompaniesService } from 'src/company-details/companies.service';
 import { RecruitersService } from 'src/recruiter-details/recruiters.service';
 import { Offer } from './entities/offer.entity';
@@ -70,11 +70,22 @@ export class OffersService {
     }
 
     // Mapear las relaciones para asignarlas correctamente a la oferta
-    const modalityInstances = await this.modalityTypeRepository.findByIds(modalityTypes.map(modality => modality.id));
-    const contractInstances = await this.contractTypeRepository.findByIds(contractTypes.map(contract => contract.id));
-    const experienceInstances = await this.experienceLevelRepository.findByIds(experienceLevels.map(experience => experience.id));
-    const workAreaInstances = await this.workAreaRepository.findByIds(workAreas.map(workArea => workArea.id));
-    const additionalBenefitInstances = await this.additionalBenefitRepository.findByIds(additionalBenefits.map(benefit => benefit.id));
+    const modalityInstances = await this.modalityTypeRepository.findBy({
+      id: In(modalityTypes.map(modality => modality.id))
+    });
+    const contractInstances = await this.contractTypeRepository.findBy({
+      id: In(contractTypes.map(contract => contract.id))
+    });
+    const experienceInstances = await this.experienceLevelRepository.findBy({
+      id: In(experienceLevels.map(experience => experience.id))
+    });
+    const workAreaInstances = await this.workAreaRepository.findBy({
+      id: In(workAreas.map(workArea => workArea.id))
+    });
+    const additionalBenefitInstances = await this.additionalBenefitRepository.findBy({
+      id: In(additionalBenefits.map(benefit => benefit.id))
+    });
+
 
     // Crear la oferta con las relaciones mapeadas
     const offer = this.offerRepository.create({
@@ -101,6 +112,7 @@ async findAll(paginationDto: PaginationDto) {
       relations: {
           company: {
               user: true, // Relación con usuario de la compañía
+              industries: true // Relación con industrias
           },
           recruiter: {
               user: true, // Relación con usuario del reclutador
@@ -177,4 +189,24 @@ async findAll(paginationDto: PaginationDto) {
   remove(id: number) {
     return `This action removes a #${id} offer`;
   }
+  
+  // Obtener Tags
+
+  async findAllModalityType() : Promise<ModalityType[]> {
+    return await this.modalityTypeRepository.find();
+  }
+
+  async findAllContractType() : Promise<ContractType[]> {
+    return await this.contractTypeRepository.find();
+  }
+  async findAllExperienceLevel() : Promise<ExperienceLevel[]> {
+    return await this.experienceLevelRepository.find();
+  }
+  async findAllWorkArea() : Promise<WorkArea[]> {
+    return await this.workAreaRepository.find();
+  }
+  async findAllAdditionalBenefit() : Promise<AdditionalBenefit[]> {
+    return await this.additionalBenefitRepository.find();
+  }
+
 }
