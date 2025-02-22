@@ -134,8 +134,26 @@ async findAll(paginationDto: PaginationDto) {
     return this.offerRepository.count();
   }
   //ToDo:
-  findOne(id: number) {
-    return `This action returns a #${id} offer`;
+  findOne(id: string) {
+    return this.offerRepository.findOne(
+      {where: {id}, 
+      relations: {
+        company: {
+            user: true, // Relación con usuario de la compañía
+            industries: true // Relación con industrias
+        },
+        recruiter: {
+            user: true, // Relación con usuario del reclutador
+        },
+        modalityTypes: true, // Relación con modalidad de trabajo
+        contractTypes: true, // Relación con tipos de contrato
+        experienceLevels: true, // Relación con niveles de experiencia
+        workAreas: true, // Relación con áreas de trabajo
+        additionalBenefits: true, // Relación con beneficios adicionales
+    },
+    }
+      
+    );
   }
   //ToDo:
   findByCompany(){

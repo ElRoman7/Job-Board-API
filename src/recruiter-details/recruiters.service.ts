@@ -71,7 +71,8 @@ export class RecruitersService {
 
   async findOneByUserId(id: string) {
     const recruiter = await this.recruitersRepository.findOne({
-      where: {user_id: id}
+      where: {user_id: id},
+      relations: ['user']
     })
     // if(!recruiter) throw new NotFoundException(`Recruiter with id ${id} not found`)
     return recruiter;

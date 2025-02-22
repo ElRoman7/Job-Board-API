@@ -20,11 +20,17 @@ export class RecruitersController {
   findAll() {
     return this.recruitersService.findAll();
   }
+  @Get('user/:id')
+  findRecruiterByUserId(@Param('id') id: string) {
+    return this.recruitersService.findOneByUserId(id);
+  }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.recruitersService.findRecruiterWithRelations(id);
   }
+
+
 
   @Patch(':id')
   update(
