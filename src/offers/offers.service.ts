@@ -36,25 +36,23 @@ export class OffersService {
   async create(createOfferDto: CreateOfferDto, userId: string) {
     const { companyId, modalityTypes, contractTypes, experienceLevels, workAreas, additionalBenefits, ...rest } = createOfferDto;
     
-    // Buscar la compañía asociada al usuario
-    const company = await this.companiesService.findOneByUserId(userId);
+    // Buscar la compañía asociada al usuario    
+    let company = await this.companiesService.findOneByUserId(userId);
+    console.log(company);
+    
+    // Buscar el reclutador asociado al usuario
+    const recruiter = await this.recruitersService.findOneByUserId(userId);
     
     // Validar que el companyId coincida con el de la compañía del usuario
     if(company){
       if (company.id !== companyId) {
         throw new UnauthorizedException(`Company with id ${companyId} does not match with the company of the user`);
-    }
-    }
-    
-
-    
-    // Buscar el reclutador asociado al usuario
-    const recruiter = await this.recruitersService.findOneByUserId(userId);
-
-    // Si el reclutador no existe, creamos la oferta solo si es la misma compañía del usuario
-    if (!recruiter) {
+      }
+      // Si el reclutador no existe, creamos la oferta solo si es la misma compañía del usuario
+      if (!recruiter) {
         const offer = this.offerRepository.create({
             company,
+            recruiter: null,
             modalityTypes,  // Aquí se mapea directamente
             contractTypes,  // Aquí se mapea directamente
             experienceLevels, // Aquí se mapea directamente
@@ -63,7 +61,10 @@ export class OffersService {
             ...rest
         });
         return this.offerRepository.save(offer);
+      }
     }
+    // Si el reclutador no existe, lanzar error    
+    company = await this.companiesService.findOne(companyId);
 
     // Si el reclutador existe, verificamos si tiene permisos para crear ofertas para esta compañía
     const companiesForRecruiter = await this.recruitersService.getCompaniesForRecruiter(recruiter.id);
@@ -90,10 +91,11 @@ export class OffersService {
       id: In(additionalBenefits.map(benefit => benefit.id))
     });
 
-
+    console.log(company);
+    
     // Crear la oferta con las relaciones mapeadas
     const offer = this.offerRepository.create({
-        company,
+        company : company,
         recruiter,
         modalityTypes: modalityInstances,
         contractTypes: contractInstances,
@@ -104,40 +106,38 @@ export class OffersService {
     });
     
     return this.offerRepository.save(offer);
-}
+  }
 
 
-async findAll(paginationDto: PaginationDto) {
-  const { limit = 10, offset = 0 } = paginationDto;
+  async findAll(paginationDto: PaginationDto) {
+    const { limit = 10, offset = 0 } = paginationDto;
 
-  const offers = await this.offerRepository.find({
-      take: limit,
-      skip: offset,
-      relations: {
-          company: {
-              user: true, // Relación con usuario de la compañía
-              industries: true // Relación con industrias
-          },
-          recruiter: {
-              user: true, // Relación con usuario del reclutador
-          },
-          modalityTypes: true, // Relación con modalidad de trabajo
-          contractTypes: true, // Relación con tipos de contrato
-          experienceLevels: true, // Relación con niveles de experiencia
-          workAreas: true, // Relación con áreas de trabajo
-          additionalBenefits: true, // Relación con beneficios adicionales
-      },
-  });
+    const offers = await this.offerRepository.find({
+        take: limit,
+        skip: offset,
+        relations: {
+            company: {
+                user: true, // Relación con usuario de la compañía
+                industries: true // Relación con industrias
+            },
+            recruiter: {
+                user: true, // Relación con usuario del reclutador
+            },
+            modalityTypes: true, // Relación con modalidad de trabajo
+            contractTypes: true, // Relación con tipos de contrato
+            experienceLevels: true, // Relación con niveles de experiencia
+            workAreas: true, // Relación con áreas de trabajo
+            additionalBenefits: true, // Relación con beneficios adicionales
+        },
+    });
 
-  const total = await this.countAll(); // Suponiendo que tienes un método para contar todas las ofertas
-  return { offers, total };
-}
-
+    const total = await this.countAll(); // Suponiendo que tienes un método para contar todas las ofertas
+    return { offers, total };
+  }
 
   async countAll() {
-    return this.offerRepository.count();
+      return this.offerRepository.count();
   }
-  //ToDo:
   findOne(id: string) {
     return this.offerRepository.findOne(
       {where: {id}, 
