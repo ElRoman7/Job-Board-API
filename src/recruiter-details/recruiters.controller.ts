@@ -6,6 +6,7 @@ import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { Auth, GetUser } from 'src/auth/decorators';
 import { ValidRoles } from 'src/users/interfaces/valid-roles';
 import { User } from 'src/users/entities/user.entity';
+import { EmailToCompanyRecruiterDTO } from './dto/email-company-recruiter.dto';
 
 @Controller('recruiters')
 export class RecruitersController {
@@ -14,6 +15,31 @@ export class RecruitersController {
   @Post()
   create(@Body('recruiter') createRecruiterDto: CreateRecruiterDto, @Body('user') createUserDto: CreateUserDto) {
     return this.recruitersService.create(createRecruiterDto, createUserDto);
+  }
+
+  @Auth(ValidRoles.company)
+  @Post('send-invitation')
+  async sendInvitationToRecruiter(
+    @GetUser() user: User,
+    @Body() emailToCompanyRecruiterDTO : EmailToCompanyRecruiterDTO
+  ) {
+    return this.recruitersService.SendInvitationToRecruiter(user, emailToCompanyRecruiterDTO.email);
+  }
+
+  @Auth(ValidRoles.company)
+  @Post('/company/:token')
+  async addRecruiterToCompany(
+    @Param('token', ParseUUIDPipe,) token: string, 
+  ){
+    return await this.recruitersService.addRecruiterToCompany(token);
+  }
+
+  @Auth(ValidRoles.company)
+  @Get('/company/:token')
+  async checkRoute(
+    @Param('token', ParseUUIDPipe,) token: string, 
+  ){
+    return await this.recruitersService.checkRoute(token);
   }
 
   @Get()
@@ -30,8 +56,6 @@ export class RecruitersController {
     return this.recruitersService.findRecruiterWithRelations(id);
   }
 
-
-
   @Patch(':id')
   update(
     @Param('id', ParseUUIDPipe) id: string, 
@@ -46,12 +70,5 @@ export class RecruitersController {
   }
 
   //: upgradeUserToRecruiter (funcion para que un usuario se convierta en reclutador)
-  @Auth(ValidRoles.company)
-  @Post(':recruiterId')
-  async addRecruiterToCompany(
-    @Param('recruiterId', ParseUUIDPipe,) recruiterId: string, 
-    @GetUser() user: User
-  ){
-    return this.recruitersService.addRecruiterToCompany(recruiterId, user)
-  }
+
 }

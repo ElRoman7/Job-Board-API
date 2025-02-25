@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { CreateRecruiterDto } from './dto/create-recruiter.dto';
 import { UpdateRecruiterDto } from './dto/update-recruiter.dto';
 import { UsersService } from 'src/users/users.service';
@@ -13,17 +13,24 @@ import { User } from 'src/users/entities/user.entity';
 import { CompaniesService } from 'src/company-details/companies.service';
 import { Company } from 'src/company-details/entities/company.entity';
 import { MailService } from 'src/mail/mail.service';
+import { AuthService } from 'src/auth/auth.service';
+import { EncoderService } from 'src/common/encoder.service';
+import { Invitation } from './entities/invitations.entity';
 
 @Injectable()
 export class RecruitersService {
   constructor(
-    private readonly errorHandlerService: ErrorHandlerService,
-    private readonly usersService: UsersService,
     @InjectRepository(Recruiter)
     private readonly recruitersRepository : Repository<Recruiter>,
+    @InjectRepository(Invitation)
+    private readonly invitationsRepository: Repository<Invitation>,
+    private readonly errorHandlerService: ErrorHandlerService,
+    private readonly encoderService: EncoderService,
+    private readonly usersService: UsersService,
     private readonly dataSource: DataSource,
     private readonly companiesService: CompaniesService,
-    private readonly mailService: MailService
+    private readonly mailService: MailService,
+    private readonly authService: AuthService
   ){}
 
   async create(createRecruiterDto: CreateRecruiterDto, createUserDto: CreateUserDto): Promise<Recruiter> {
@@ -112,17 +119,94 @@ export class RecruitersService {
     return recruiter;
   }
 
-  async addRecruiterToCompany(recruiterId: string, user: User): Promise<Recruiter> {
-    const recruiter = await this.findRecruiterWithRelations(recruiterId)
-    if (!recruiter) throw new NotFoundException(`Recruiter with id ${recruiterId} not found`);
-    if(!user.roles.includes(ValidRoles.company)){
-      throw new ForbiddenException(`User does not have the necessary role`);
+  async addRecruiterToCompany(token: string) {
+    const invitation = await this.invitationsRepository.findOne({
+      where: { token },
+      relations: ['recruiter', 'recruiter.companies', 'company'],
+    });
+    
+    console.log(invitation);
+  
+    if (!invitation) {
+      throw new Error('Invitation not found');
     }
-    const company = await this.companiesService.findCompanyWithUser(user.id)
-
+  
+    const recruiter = invitation.recruiter;
+    const company = invitation.company;
+  
+    if (!recruiter) {
+      throw new Error('Recruiter not found');
+    }
+    if (!recruiter.companies) {
+      recruiter.companies = [];
+    }
+    invitation.status = 'ACCEPTED';
+    invitation.acceptedAt = new Date();
+    // Guardamos la invitación
+    await this.invitationsRepository.save(invitation);
     recruiter.companies.push(company);
+    // Guardamos el reclutador
     return this.recruitersRepository.save(recruiter);
   }
+
+  async checkRoute(token: string): Promise<boolean> {
+    const invitation = await this.invitationsRepository.findOne({
+      where: { token },
+      relations: ['recruiter', 'recruiter.companies', 'company'],
+    });
+
+    if(!invitation){
+      return false
+    }
+    if(invitation.status === 'ACCEPTED'){
+      return false
+    }
+    
+    return true
+    
+  }
+
+  async SendInvitationToRecruiter(userCompany: User, emailRecruiter: string): Promise<void> {
+    const company = await this.companiesService.findOneByUserId(userCompany.id);
+    if (!company) {
+      throw new NotFoundException('Company not found');
+    }
+  
+    const userRecruiter = await this.usersService.finOneByEmail(emailRecruiter);
+    if (!userRecruiter) {
+      throw new NotFoundException('Recruiter not found');
+    }
+  
+    const recruiter = await this.findOneByUserId(userRecruiter.id);
+    if (!recruiter) {
+      throw new NotFoundException('Recruiter not found');
+    }
+  
+    // Crear la invitación en la base de datos
+    const token = await this.encoderService.generateToken();
+    const invitation = new Invitation();
+    invitation.recruiter = recruiter;
+    invitation.company = company;
+    invitation.status = 'PENDING';
+    invitation.token = token;
+  
+    try {
+      await this.invitationsRepository.save(invitation);
+    } catch (error) {
+      console.log(error);
+      throw new InternalServerErrorException('Error saving invitation');
+    }
+  
+    const url = `${this.mailService.frontUrl}/company-request/${token}`;
+    try {
+      await this.mailService.sendRecruiterCompanyRequest(recruiter, company, url);
+    } catch (error) {
+      console.log(error);
+      throw new InternalServerErrorException(`Error sending email to ${emailRecruiter}`);
+    }
+  }
+  
+    
 
   async getCompaniesForRecruiter(recruiterId: string): Promise<Company[]> {
     const recruiter = await this.recruitersRepository.findOne({

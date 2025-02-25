@@ -102,6 +102,7 @@ export class CompaniesService implements OnModuleInit {
     return company;
   }
 
+
   update(id: number, updateCompanyDto: UpdateCompanyDto) {
     return `This action updates a #${id} company`;
   }

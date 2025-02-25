@@ -3,12 +3,14 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { ConfigService } from '@nestjs/config';
 import { TitleCasePipe } from '../common/pipes/title-case.pipe';
 import { User } from 'src/users/entities/user.entity';
+import { Recruiter } from 'src/recruiter-details/entities/recruiter.entity';
+import { Company } from 'src/company-details/entities/company.entity';
 
 @Injectable()
 export class MailService {
   
   private baseUrl : string;
-  private frontUrl : string;
+  public frontUrl : string;
   private titleCasePipe = new TitleCasePipe(); // Crea una instancia del pipe
   
   constructor(private mailerService: MailerService, private readonly configService: ConfigService,) {
@@ -36,9 +38,8 @@ export class MailService {
   }
   
 
-  async sendUserResetPassword(user:User): Promise<void> {
+  async sendUserResetPassword(user:User, url): Promise<void> {
     const { name, email, resetPasswordToken } = user;
-    const url =`${this.frontUrl}/auth/reset-password?token=${resetPasswordToken}`;
     const formattedName = this.titleCasePipe.transform(name)
     return await this.mailerService.sendMail({
       to: email,
@@ -50,4 +51,20 @@ export class MailService {
 
     })
   }
+
+  async sendRecruiterCompanyRequest(recruiter: Recruiter, company: Company, url: string): Promise<void> {
+    const formattedName = this.titleCasePipe.transform(recruiter.user.name);
+    return await this.mailerService.sendMail({
+      to: recruiter.user.email,
+      template: './recruiter-company-request',
+      context:{
+        recruiter: recruiter,
+        company: company,
+        name: formattedName,
+        url: url
+      }
+   })
+  }
+
 }
+

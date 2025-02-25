@@ -6,11 +6,12 @@ import { User } from './entities/user.entity';
 import { CommonModule } from '../common/common.module';
 import { MailModule } from 'src/mail/mail.module';
 import { AuthModule } from 'src/auth/auth.module';
+import { Invitation } from 'src/recruiter-details/entities/invitations.entity';
 
 @Module({
   controllers: [UsersController],
   providers: [UsersService],
-  imports:[TypeOrmModule.forFeature([User]), forwardRef(() => AuthModule) ,CommonModule, MailModule],
+  imports:[TypeOrmModule.forFeature([User, Invitation]), forwardRef(() => AuthModule) ,CommonModule, MailModule],
   exports:[TypeOrmModule, UsersService]
 })
 export class UsersModule {}
