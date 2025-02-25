@@ -40,9 +40,13 @@ export class OffersService {
     const company = await this.companiesService.findOneByUserId(userId);
     
     // Validar que el companyId coincida con el de la compañía del usuario
-    if (company.id !== companyId) {
+    if(company){
+      if (company.id !== companyId) {
         throw new UnauthorizedException(`Company with id ${companyId} does not match with the company of the user`);
     }
+    }
+    
+
     
     // Buscar el reclutador asociado al usuario
     const recruiter = await this.recruitersService.findOneByUserId(userId);

@@ -49,7 +49,7 @@ export class CompaniesService implements OnModuleInit {
           throw new Error(`User creation failed: Unable to send confirmation email ${e}`);
         }
 
-        return this.sanitizeUserForCompany(company)
+        return company;
       } catch (error) {
         this.errorHandlerService.handleDBException(error)
       }
@@ -91,7 +91,7 @@ export class CompaniesService implements OnModuleInit {
       relations: ['user']
     })
     if(!company) throw new NotFoundException(`Company with id ${id} not found`)
-    return this.sanitizeUserForCompany(company);
+    return company;
   }
 
   async findOneByUserId(id: string) : Promise<Company>{
@@ -99,7 +99,7 @@ export class CompaniesService implements OnModuleInit {
       where: {user_id: id},
       relations: ['user']
     });
-    return this.sanitizeUserForCompany(company);
+    return company;
   }
 
   update(id: number, updateCompanyDto: UpdateCompanyDto) {

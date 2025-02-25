@@ -58,7 +58,9 @@ export class RecruitersService {
   }
 
   findAll() {
-    return `This action returns all recruiters`;
+    return this.recruitersRepository.find({
+      relations: ['user','companies', 'offer']
+    });
   }
 
   async findOne(id: string) {
@@ -72,7 +74,9 @@ export class RecruitersService {
   async findOneByUserId(id: string) {
     const recruiter = await this.recruitersRepository.findOne({
       where: {user_id: id},
-      relations: ['user']
+      relations: [
+        'user'
+      ]
     })
     // if(!recruiter) throw new NotFoundException(`Recruiter with id ${id} not found`)
     return recruiter;
@@ -102,7 +106,7 @@ export class RecruitersService {
   async findRecruiterWithRelations(id: string): Promise<Recruiter>{
     const recruiter = await this.recruitersRepository.findOne({
       where: {id},
-      relations: ['user','companies']
+      relations: ['user','companies', 'offer']
     })
     if(!recruiter) throw new NotFoundException(`Recruiter with id ${id} not found`)
     return recruiter;
