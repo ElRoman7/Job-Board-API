@@ -119,12 +119,12 @@ export class OffersService {
     return { offers, total };
   }
 
-  async findAllByCompanyId(companyId: string, paginationDto: PaginationDto) {
+  async findAllByCompany(user: User, paginationDto: PaginationDto){
     const { limit = 15, offset = 0 } = paginationDto;
-    const offers = await this.offerRepository.find({
+      const offers = await this.offerRepository.find({
       take: limit,
       skip: offset,
-      where: { company: { id: companyId } },
+      where: { company: { user_id: user.id } },
       relations: {
         company: {
           user: true, 
@@ -140,8 +140,33 @@ export class OffersService {
         additionalBenefits: true, 
       },
     });
-    return offers;
+    const total = await this.countAll(); // Suponiendo que tienes un método para contar todas las ofertas
+    return { offers, total };
   }
+
+  // async findAllByCompanyId(companyId: string, paginationDto: PaginationDto) {
+  //   const { limit = 15, offset = 0 } = paginationDto;
+  //   const offers = await this.offerRepository.find({
+  //     take: limit,
+  //     skip: offset,
+  //     where: { company: { id: companyId } },
+  //     relations: {
+  //       company: {
+  //         user: true, 
+  //         industries: true 
+  //       },
+  //       recruiter: {
+  //         user: true,
+  //       },
+  //       modalityTypes: true, 
+  //       contractTypes: true, 
+  //       experienceLevels: true, 
+  //       workAreas: true, 
+  //       additionalBenefits: true, 
+  //     },
+  //   });
+  //   return { offers, total };
+  // }
 
   async countAll() {
       return this.offerRepository.count();
@@ -225,7 +250,7 @@ export class OffersService {
       throw new NotFoundException(`Offer with id ${id} not found`)
     }
     
-    console.log(offer);
+    // console.log(offer);
     
 
     if (!(offer.company?.user_id === user.id || offer.recruiter?.user_id === user.id)) {

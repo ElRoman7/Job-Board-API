@@ -23,13 +23,6 @@ export class OffersController {
   findAll(@Query() paginationDto: PaginationDto) {
     return this.offersService.findAll(paginationDto);
   }
-
-  @Auth(ValidRoles.company, ValidRoles.recruiter)
-  @Get('/:companyId')
-  findAllByCompanyId(@Param('companyId', ParseUUIDPipe) companyId: string, @Query() paginationDto: PaginationDto) {
-    return this.offersService.findAllByCompanyId(companyId, paginationDto);
-  }
-
   @Get('/modality-types')
   findAllModalityTypes(){
     return this.offersService.findAllModalityType();
@@ -54,6 +47,21 @@ export class OffersController {
   findAllAdditionalBenefits(){
     return this.offersService.findAllAdditionalBenefit();
   }
+
+
+  @Auth(ValidRoles.company, ValidRoles.recruiter)
+  @Get('/company')
+  findAllByCompanyId(@GetUser() user: User, @Query() paginationDto: PaginationDto) {
+    return this.offersService.findAllByCompany(user, paginationDto);
+  }
+
+  // @Auth(ValidRoles.company, ValidRoles.recruiter)
+  // @Get('/:companyId')
+  // findAllByCompanyId(@Param('companyId', ParseUUIDPipe) companyId: string, @Query() paginationDto: PaginationDto) {
+  //   return this.offersService.findAllByCompanyId(companyId, paginationDto);
+  // }
+
+
 
   @Get(':id')
   findOne(@Param('id') id: string) {
