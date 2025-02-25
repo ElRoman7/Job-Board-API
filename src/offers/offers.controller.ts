@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, ParseUUIDPipe, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, ParseUUIDPipe, Query, Delete } from '@nestjs/common';
 import { OffersService } from './offers.service';
 import { CreateOfferDto } from './dto/create-offer.dto';
 import { UpdateOfferDto } from './dto/update-offer.dto';
@@ -72,8 +72,9 @@ export class OffersController {
     return this.offersService.update(id, updateOfferDto, user);
   }
 
-  // @Delete(':id')
-  // remove(@Param('id') id: string) {
-  //   return this.offersService.remove(+id);
-  // }
+  @Auth(ValidRoles.recruiter, ValidRoles.company)
+  @Delete(':id')
+  remove(@Param('id') id: string, @GetUser() user: User) {
+    return this.offersService.remove(id, user);
+  }
 }

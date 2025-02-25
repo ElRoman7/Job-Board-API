@@ -1,6 +1,6 @@
 import { Company } from 'src/company-details/entities/company.entity';
 import { Recruiter } from 'src/recruiter-details/entities/recruiter.entity';
-import { Column, Entity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, ManyToMany } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, ManyToMany, DeleteDateColumn } from 'typeorm';
 import { AdditionalBenefit, ContractType, ExperienceLevel, ModalityType, WorkArea } from './tags.entity';
 import { SalaryType } from '../interfaces/valid-salary-type';
 
@@ -58,4 +58,11 @@ export class Offer {
 
     @Column({ type: 'varchar', length: 50, nullable: true })
     salaryType: SalaryType;
+    
+    @DeleteDateColumn({ nullable: true })
+    deletedAt: Date;
+
+    softDelete(): void {
+        this.deletedAt = new Date();
+    }
 }

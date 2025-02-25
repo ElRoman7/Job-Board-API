@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { CreateOfferDto } from './dto/create-offer.dto';
 import { UpdateOfferDto } from './dto/update-offer.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -146,6 +146,7 @@ export class OffersService {
   async countAll() {
       return this.offerRepository.count();
   }
+
   findOne(id: string) {
     return this.offerRepository.findOne(
       {where: {id}, 
@@ -214,6 +215,27 @@ export class OffersService {
 
     Object.assign(offer, updateOfferDto);
     return this.offerRepository.save(offer);
+  }
+
+  // Eliminar Offerta (Borrado Lógico)
+  async remove(id : string, user: User){
+
+    const offer = await this.findOne(id);
+    if(!offer){
+      throw new NotFoundException(`Offer with id ${id} not found`)
+    }
+    
+    console.log(offer);
+    
+
+    if (!(offer.company?.user_id === user.id || offer.recruiter?.user_id === user.id)) {
+      throw new BadRequestException(`User with id ${user.id} is not allowed to delete this offer`);
+    }
+    
+
+    offer.deletedAt = new Date();
+
+    return this.offerRepository.save(offer)
   }
 
   // Obtener Tags
