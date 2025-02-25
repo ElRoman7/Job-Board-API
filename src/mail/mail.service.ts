@@ -46,7 +46,8 @@ export class MailService {
       template: './reset-password',
       context:{
         url: url,
-        name: formattedName
+        name: formattedName,
+        resetPasswordToken
       }
 
     })

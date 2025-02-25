@@ -1,6 +1,5 @@
 import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { CreateCompanyDto } from './dto/create-company.dto';
-import { UpdateCompanyDto } from './dto/update-company.dto';
 import { Company } from './entities/company.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, In, QueryRunner, Repository } from 'typeorm';
@@ -77,9 +76,7 @@ export class CompaniesService implements OnModuleInit {
     });
 
     return company;
-}
-
-  
+  }
 
   findAll() {
     return `This action returns all companies`;
@@ -88,78 +85,51 @@ export class CompaniesService implements OnModuleInit {
   async findOne(id: string) : Promise<Company>{
     const company = await this.companyRepository.findOne({
       where: {id},
-      relations: ['user']
+      relations: {
+        user: true,
+        industries: true
+      }
     })
-    if(!company) throw new NotFoundException(`Company with id ${id} not found`)
+    if(!company) throw new NotFoundException(`Company with user id ${id} not found`)
     return company;
   }
 
   async findOneByUserId(id: string) : Promise<Company>{
     const company = await this.companyRepository.findOne({
       where: {user_id: id},
-      relations: ['user']
+      relations: {
+        user: true,
+        industries: true
+      }
     });
     return company;
   }
 
-
-  update(id: number, updateCompanyDto: UpdateCompanyDto) {
-    return `This action updates a #${id} company`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} company`;
-  }
-
-  async findCompanyById(id: string): Promise<Company>{
-    const company = await this.companyRepository.findOne({
-      where: {id},
-      relations: {
-        user: true,
-        industries: true
-      }
-    })
-    if(!company) throw new NotFoundException(`Company with user id ${id} not found`)
-    return company;
-  }
-
-  async findCompanyWithUser(id:string): Promise<Company>{
-    const company = await this.companyRepository.findOne({
-      where: {user_id : id},
-      relations: {
-        user: true,
-        industries: true
-      }
-    })
-    if(!company) throw new NotFoundException(`Company with user id ${id} not found`)
-    return company;
-  }
-
-    // Método para cargar las industrias desde un archivo JSON
-    async loadIndustriesFromJson(): Promise<void> {
-      const filePath = path.join(__dirname , 'data/industries.json');
+  // Método para cargar las industrias desde un archivo JSON
+  async loadIndustriesFromJson(): Promise<void> {
+    const filePath = path.join(__dirname , 'data/industries.json');
+    
+    try {
+      const fileContent = fs.readFileSync(filePath, 'utf8');
+      const industries = JSON.parse(fileContent);
       
-      try {
-        const fileContent = fs.readFileSync(filePath, 'utf8');
-        const industries = JSON.parse(fileContent);
-        
-  
-        // Guarda las industrias en la base de datos si no existen
-        for (const industry of industries) {
-          const exists = await this.industryRepository.findOne({ where: { name: industry.name } });
-          if (!exists) {
-            await this.industryRepository.save(industry);
-          }
-        }
-  
-        console.log('Industrias cargadas exitosamente.');
-      } catch (error) {
-        console.error('Error al cargar el archivo de industrias:', error);
-      }
-    }
 
-    // Método para obtener las industrias
-    async getIndustries(): Promise<Industry[]> {
-      return await this.industryRepository.find();
+      // Guarda las industrias en la base de datos si no existen
+      for (const industry of industries) {
+        const exists = await this.industryRepository.findOne({ where: { name: industry.name } });
+        if (!exists) {
+          await this.industryRepository.save(industry);
+        }
+      }
+
+      console.log('Industrias cargadas exitosamente.');
+    } catch (error) {
+      console.error('Error al cargar el archivo de industrias:', error);
     }
+  }
+
+  // Método para obtener las industrias
+  async getIndustries(): Promise<Industry[]> {
+    return await this.industryRepository.find();
+  }
 }
