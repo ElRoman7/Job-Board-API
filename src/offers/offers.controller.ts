@@ -21,7 +21,7 @@ export class OffersController {
   @Auth(ValidRoles.recruiter, ValidRoles.company)
   @Post()
   create(@Body() createOfferDto: CreateOfferDto, @GetUser() user: User) {
-    return this.offersService.create(createOfferDto, user.id);
+    return this.offersService.create(createOfferDto, user);
   }
   
   @Get()

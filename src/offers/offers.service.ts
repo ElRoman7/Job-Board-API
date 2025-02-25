@@ -33,79 +33,63 @@ export class OffersService {
 
   ){}
 
-  async create(createOfferDto: CreateOfferDto, userId: string) {
-    const { companyId, modalityTypes, contractTypes, experienceLevels, workAreas, additionalBenefits, ...rest } = createOfferDto;
-    
-    // Buscar la compañía asociada al usuario    
-    let company = await this.companiesService.findOneByUserId(userId);
-    console.log(company);
-    
-    // Buscar el reclutador asociado al usuario
-    const recruiter = await this.recruitersService.findOneByUserId(userId);
-    
-    // Validar que el companyId coincida con el de la compañía del usuario
-    if(company){
+  async create(createOfferDto: CreateOfferDto, user: User) {
+    const { companyId, ...rest } = createOfferDto;
+
+    // Obtener entidades relacionadas
+    const relatedEntities = await this.getRelatedEntities(createOfferDto);
+
+    // Si el usuario es reclutador, validar permisos
+    if (user.roles.includes('recruiter')) {
+        const recruiter = await this.recruitersService.findOneByUserId(user.id);
+        if (!recruiter) throw new UnauthorizedException(`Recruiter not found`);
+
+        const company = await this.companiesService.findOne(companyId);
+        await this.validateRecruiterPermissions(recruiter.id, companyId);
+
+        return this.saveOffer({ company, recruiter, ...relatedEntities, ...rest });
+    }
+
+    // Si el usuario no es reclutador, validar su compañía
+    const company = await this.validateCompanyForUser(user.id, companyId);
+    return this.saveOffer({ company, recruiter: null, ...relatedEntities, ...rest });
+  }
+
+  // Obtener entidades relacionadas
+  private async getRelatedEntities(createOfferDto: CreateOfferDto) {
+      const { modalityTypes, contractTypes, experienceLevels, workAreas, additionalBenefits } = createOfferDto;
+
+      return {
+          modalityTypes: await this.modalityTypeRepository.findBy({ id: In(modalityTypes.map(m => m.id)) }),
+          contractTypes: await this.contractTypeRepository.findBy({ id: In(contractTypes.map(c => c.id)) }),
+          experienceLevels: await this.experienceLevelRepository.findBy({ id: In(experienceLevels.map(e => e.id)) }),
+          workAreas: await this.workAreaRepository.findBy({ id: In(workAreas.map(w => w.id)) }),
+          additionalBenefits: await this.additionalBenefitRepository.findBy({ id: In(additionalBenefits.map(b => b.id)) }),
+      };
+  }
+
+  // Validar permisos del reclutador
+  private async validateRecruiterPermissions(recruiterId: string, companyId: string) {
+      const companiesForRecruiter = await this.recruitersService.getCompaniesForRecruiter(recruiterId);
+      if (!companiesForRecruiter.some(company => company.id === companyId)) {
+          throw new UnauthorizedException(`Recruiter does not have permission to publish offers for company ${companyId}`);
+      }
+  }
+
+  // Validar que la compañía pertenece al usuario
+  private async validateCompanyForUser(userId: string, companyId: string) {
+      const company = await this.companiesService.findOneByUserId(userId);
+      if (!company) throw new BadRequestException(`Company with user_id ${userId} not found`);
       if (company.id !== companyId) {
-        throw new UnauthorizedException(`Company with id ${companyId} does not match with the company of the user`);
+          throw new UnauthorizedException(`Company with id ${companyId} does not match with the company of the user`);
       }
-      // Si el reclutador no existe, creamos la oferta solo si es la misma compañía del usuario
-      if (!recruiter) {
-        const offer = this.offerRepository.create({
-            company,
-            recruiter: null,
-            modalityTypes,  // Aquí se mapea directamente
-            contractTypes,  // Aquí se mapea directamente
-            experienceLevels, // Aquí se mapea directamente
-            workAreas,  // Aquí se mapea directamente
-            additionalBenefits, // Aquí se mapea directamente
-            ...rest
-        });
-        return this.offerRepository.save(offer);
-      }
-    }
-    // Si el reclutador no existe, lanzar error    
-    company = await this.companiesService.findOne(companyId);
+      return company;
+  }
 
-    // Si el reclutador existe, verificamos si tiene permisos para crear ofertas para esta compañía
-    const companiesForRecruiter = await this.recruitersService.getCompaniesForRecruiter(recruiter.id);
-    const hasPermission = companiesForRecruiter.some(company => company.id === companyId);
-    
-    if (!hasPermission) {
-        throw new UnauthorizedException(`Recruiter does not have permission to publish offers for company with id ${companyId}`);
-    }
-
-    // Mapear las relaciones para asignarlas correctamente a la oferta
-    const modalityInstances = await this.modalityTypeRepository.findBy({
-      id: In(modalityTypes.map(modality => modality.id))
-    });
-    const contractInstances = await this.contractTypeRepository.findBy({
-      id: In(contractTypes.map(contract => contract.id))
-    });
-    const experienceInstances = await this.experienceLevelRepository.findBy({
-      id: In(experienceLevels.map(experience => experience.id))
-    });
-    const workAreaInstances = await this.workAreaRepository.findBy({
-      id: In(workAreas.map(workArea => workArea.id))
-    });
-    const additionalBenefitInstances = await this.additionalBenefitRepository.findBy({
-      id: In(additionalBenefits.map(benefit => benefit.id))
-    });
-
-    console.log(company);
-    
-    // Crear la oferta con las relaciones mapeadas
-    const offer = this.offerRepository.create({
-        company : company,
-        recruiter,
-        modalityTypes: modalityInstances,
-        contractTypes: contractInstances,
-        experienceLevels: experienceInstances,
-        workAreas: workAreaInstances,
-        additionalBenefits: additionalBenefitInstances,
-        ...rest
-    });
-    
-    return this.offerRepository.save(offer);
+  // Guardar la oferta en la base de datos
+  private saveOffer(data: Partial<Offer>) {
+      const offer = this.offerRepository.create(data);
+      return this.offerRepository.save(offer);
   }
 
 
