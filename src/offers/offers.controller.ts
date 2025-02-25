@@ -1,10 +1,7 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, ParseUUIDPipe, Query } from '@nestjs/common';
 import { OffersService } from './offers.service';
 import { CreateOfferDto } from './dto/create-offer.dto';
 import { UpdateOfferDto } from './dto/update-offer.dto';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Offer } from './entities/offer.entity';
-import { Repository } from 'typeorm';
 import { Auth, GetUser } from '../auth/decorators';
 import { ValidRoles } from '../users/interfaces/valid-roles';
 import { User } from 'src/users/entities/user.entity';
@@ -13,9 +10,7 @@ import { PaginationDto } from 'src/common/dto/pagination.dto';
 @Controller('offers')
 export class OffersController {
   constructor(
-    private readonly offersService: OffersService,
-    @InjectRepository(Offer)
-    private readonly offersRepository : Repository<Offer>
+    private readonly offersService: OffersService,  
   ) {}
 
   @Auth(ValidRoles.recruiter, ValidRoles.company)
@@ -27,6 +22,12 @@ export class OffersController {
   @Get()
   findAll(@Query() paginationDto: PaginationDto) {
     return this.offersService.findAll(paginationDto);
+  }
+
+  @Auth(ValidRoles.company, ValidRoles.recruiter)
+  @Get('/:companyId')
+  findAllByCompanyId(@Param('companyId', ParseUUIDPipe) companyId: string, @Query() paginationDto: PaginationDto) {
+    return this.offersService.findAllByCompanyId(companyId, paginationDto);
   }
 
   @Get('/modality-types')
@@ -71,8 +72,8 @@ export class OffersController {
     return this.offersService.update(id, updateOfferDto, user);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.offersService.remove(+id);
-  }
+  // @Delete(':id')
+  // remove(@Param('id') id: string) {
+  //   return this.offersService.remove(+id);
+  // }
 }

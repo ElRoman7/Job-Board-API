@@ -87,7 +87,7 @@ export class CompaniesService implements OnModuleInit {
       where: {id},
       relations: {
         user: true,
-        industries: true
+        industries: true,
       }
     })
     if(!company) throw new NotFoundException(`Company with user id ${id} not found`)

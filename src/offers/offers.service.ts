@@ -94,7 +94,7 @@ export class OffersService {
 
 
   async findAll(paginationDto: PaginationDto) {
-    const { limit = 10, offset = 0 } = paginationDto;
+    const { limit = 15, offset = 0 } = paginationDto;
 
     const offers = await this.offerRepository.find({
         take: limit,
@@ -117,6 +117,30 @@ export class OffersService {
 
     const total = await this.countAll(); // Suponiendo que tienes un método para contar todas las ofertas
     return { offers, total };
+  }
+
+  async findAllByCompanyId(companyId: string, paginationDto: PaginationDto) {
+    const { limit = 15, offset = 0 } = paginationDto;
+    const offers = await this.offerRepository.find({
+      take: limit,
+      skip: offset,
+      where: { company: { id: companyId } },
+      relations: {
+        company: {
+          user: true, 
+          industries: true 
+        },
+        recruiter: {
+          user: true,
+        },
+        modalityTypes: true, 
+        contractTypes: true, 
+        experienceLevels: true, 
+        workAreas: true, 
+        additionalBenefits: true, 
+      },
+    });
+    return offers;
   }
 
   async countAll() {
@@ -192,12 +216,7 @@ export class OffersService {
     return this.offerRepository.save(offer);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} offer`;
-  }
-  
   // Obtener Tags
-
   async findAllModalityType() : Promise<ModalityType[]> {
     return await this.modalityTypeRepository.find();
   }
