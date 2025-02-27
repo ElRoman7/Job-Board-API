@@ -204,7 +204,7 @@ export class RecruitersService {
     }
   }
   
-  async getRecruitersForCompanies(user : User){
+  async getRecruitersByCompany(user : User){
     const company = await this.companiesService.findOneByUserId(user.id)
     if(!company){
       throw new NotFoundException('Company Not founded')

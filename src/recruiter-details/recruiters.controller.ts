@@ -20,7 +20,7 @@ export class RecruitersController {
   @Auth(ValidRoles.company)
   @Get('/company')
   async getRecruitersByCompany(@GetUser() user : User) {
-    return await this.getRecruitersByCompany(user)
+    return this.recruitersService.getRecruitersByCompany(user)
   }
 
   @Auth(ValidRoles.company)
