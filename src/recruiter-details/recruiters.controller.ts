@@ -18,12 +18,18 @@ export class RecruitersController {
   }
 
   @Auth(ValidRoles.company)
+  @Get('/company')
+  async getRecruitersByCompany(@GetUser() user : User) {
+    return await this.getRecruitersByCompany(user)
+  }
+
+  @Auth(ValidRoles.company)
   @Post('send-invitation')
   async sendInvitationToRecruiter(
     @GetUser() user: User,
     @Body() emailToCompanyRecruiterDTO : EmailToCompanyRecruiterDTO
   ) {
-    return this.recruitersService.SendInvitationToRecruiter(user, emailToCompanyRecruiterDTO.email);
+    return await this.recruitersService.SendInvitationToRecruiter(user, emailToCompanyRecruiterDTO.email);
   }
 
   @Auth(ValidRoles.company)

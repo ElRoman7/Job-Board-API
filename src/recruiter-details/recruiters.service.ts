@@ -81,9 +81,7 @@ export class RecruitersService {
   async findOneByUserId(id: string) {
     const recruiter = await this.recruitersRepository.findOne({
       where: {user_id: id},
-      relations: [
-        'user'
-      ]
+      relations: ['user','companies', 'offer']
     })
     // if(!recruiter) throw new NotFoundException(`Recruiter with id ${id} not found`)
     return recruiter;
@@ -206,7 +204,20 @@ export class RecruitersService {
     }
   }
   
-    
+  async getRecruitersForCompanies(user : User){
+    const company = await this.companiesService.findOneByUserId(user.id)
+    if(!company){
+      throw new NotFoundException('Company Not founded')
+    }
+    const { id : companyId } = company
+
+    const recruiters = await this.recruitersRepository.find({
+      where: {companies: { id : companyId } },
+      relations: ['user','companies', 'offer']
+    })
+
+    return recruiters;
+  }
 
   async getCompaniesForRecruiter(recruiterId: string): Promise<Company[]> {
     const recruiter = await this.recruitersRepository.findOne({
