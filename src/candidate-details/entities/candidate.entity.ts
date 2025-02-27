@@ -1,5 +1,6 @@
+import { Application } from "src/job-applications/entities/application.entity";
 import { User } from "src/users/entities/user.entity";
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, Unique } from "typeorm";
 
 @Entity('candidate_details')
 @Unique(['user_id']) // Esto asegura que user_id sea único en la tabla
@@ -19,6 +20,9 @@ export class Candidate {
     //* Definir explícitamente la columna user_id para que sea parte de la entidad
     @Column({ type: 'uuid' })
     user_id: string;
+
+    @OneToMany(() => Application, (application) => application.candidate)
+    applications: Application[];
 
     //* Relación con User (FK user_id)
     @ManyToOne(() => User, (user) => user.id, { onDelete: 'CASCADE' })

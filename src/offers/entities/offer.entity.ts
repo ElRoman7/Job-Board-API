@@ -1,8 +1,9 @@
 import { Company } from 'src/company-details/entities/company.entity';
 import { Recruiter } from 'src/recruiter-details/entities/recruiter.entity';
-import { Column, Entity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, ManyToMany, DeleteDateColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, ManyToMany, DeleteDateColumn, OneToMany } from 'typeorm';
 import { AdditionalBenefit, ContractType, ExperienceLevel, ModalityType, WorkArea } from './tags.entity';
 import { SalaryType } from '../interfaces/valid-salary-type';
+import { Application } from 'src/job-applications/entities/application.entity';
 
 @Entity('offers')
 export class Offer {
@@ -61,6 +62,10 @@ export class Offer {
     
     @DeleteDateColumn({ nullable: true })
     deletedAt: Date;
+
+    @OneToMany(() => Application, (application) => application.offer)
+    applications: Application[];
+    
 
     softDelete(): void {
         this.deletedAt = new Date();

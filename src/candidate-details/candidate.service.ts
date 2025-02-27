@@ -45,6 +45,10 @@ export class CandidateService {
     });
   }
 
+  async findOneByUserId (user_id: string) {
+    return await this.candidateRepository.findOneBy({user_id})
+  }
+
   async prepareCandidateForTransaction(createCandidateDto: CreateCandidateDto, user: User) {
     const candidate = await this.candidateRepository.create({
       ...createCandidateDto,
