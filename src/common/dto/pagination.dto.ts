@@ -12,4 +12,8 @@ export class PaginationDto {
   @Min(0)
   @Type(() => Number)
   offset?: number;
+
+  @IsOptional()
+  @Type(()=> String)
+  recruiterId?: string;
 }

@@ -213,7 +213,21 @@ export class RecruitersService {
 
     const recruiters = await this.recruitersRepository.find({
       where: {companies: { id : companyId } },
-      relations: ['user','companies', 'offer']
+      // relations: ['user','companies', 'offer']
+      relations: {
+        user: true,
+        companies: {
+          user: true,
+          industries: true,
+        },
+        offer: {
+          modalityTypes: true, // Relación con modalidad de trabajo
+          contractTypes: true, // Relación con tipos de contrato
+          experienceLevels: true, // Relación con niveles de experiencia
+          workAreas: true, // Relación con áreas de trabajo
+          additionalBenefits: true, // Relación con beneficios adicionales
+        }
+      }
     })
 
     return recruiters;

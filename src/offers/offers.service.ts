@@ -94,11 +94,17 @@ export class OffersService {
 
 
   async findAll(paginationDto: PaginationDto) {
-    const { limit = 15, offset = 0 } = paginationDto;
+    const { limit = 15, offset = 0 , recruiterId} = paginationDto;
 
+    const whereCondition: any = {};
+
+    if (recruiterId) {
+      whereCondition.recruiter = { id: recruiterId };
+    }
     const offers = await this.offerRepository.find({
         take: limit,
         skip: offset,
+        where: whereCondition,
         relations: {
             company: {
                 user: true, // Relación con usuario de la compañía
@@ -114,36 +120,63 @@ export class OffersService {
             additionalBenefits: true, // Relación con beneficios adicionales
         },
     });
+    console.log(offers);
 
-    const total = await this.countAll(); // Suponiendo que tienes un método para contar todas las ofertas
-    return { offers, total };
+    let total = 0
+    if(recruiterId){
+      total = offers.length
+    }else{
+      total = await this.countAll(); // Suponiendo que tienes un método para contar todas las ofertas
+    }
+    return { offers, total, recruiterId };
   }
 
-  async findAllByCompany(user: User, paginationDto: PaginationDto){
-    const { limit = 15, offset = 0 } = paginationDto;
-      const offers = await this.offerRepository.find({
+  async findAllByCompany(user: User, paginationDto: PaginationDto) {
+    const { limit = 15, offset = 0, recruiterId } = paginationDto;
+
+    const whereCondition: any = { };
+
+    if(user.roles[0] == 'company'){
+      whereCondition.company = { user_id: user.id };
+    }
+  
+ 
+  
+    if (recruiterId) {
+      whereCondition.recruiter = { id: recruiterId };
+    }
+  
+    const offers = await this.offerRepository.find({
       take: limit,
       skip: offset,
-      where: { company: { user_id: user.id } },
+      where: whereCondition,
       relations: {
         company: {
-          user: true, 
-          industries: true 
+          user: true,
+          industries: true,
         },
         recruiter: {
           user: true,
         },
-        modalityTypes: true, 
-        contractTypes: true, 
-        experienceLevels: true, 
-        workAreas: true, 
-        additionalBenefits: true, 
+        modalityTypes: true,
+        contractTypes: true,
+        experienceLevels: true,
+        workAreas: true,
+        additionalBenefits: true,
       },
     });
-    const total = await this.countAll(); // Suponiendo que tienes un método para contar todas las ofertas
+    let total = 0
+    if(recruiterId){
+      total = offers.length
+    }else{
+      total = await this.countAll(); // Suponiendo que tienes un método para contar todas las ofertas
+    }
+    console.log('Filter conditions:', whereCondition);
+
+
     return { offers, total };
   }
-
+  
   // async findAllByCompanyId(companyId: string, paginationDto: PaginationDto) {
   //   const { limit = 15, offset = 0 } = paginationDto;
   //   const offers = await this.offerRepository.find({
