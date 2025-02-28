@@ -45,6 +45,16 @@ export class CandidateService {
     });
   }
 
+  async findAll() {
+    return await this.candidateRepository.find(
+      {
+        relations: {
+          user: true
+        }
+      }
+    )
+  }
+
   async findOneByUserId (user_id: string) {
     return await this.candidateRepository.findOneBy({user_id})
   }
