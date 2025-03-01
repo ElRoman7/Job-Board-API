@@ -7,59 +7,61 @@ import { Industry } from "./industry.entity";
 @Entity('company_details')
 @Unique(['user_id']) // Esto asegura que user_id sea único en la tabla
 export class Company {
-    @PrimaryGeneratedColumn('uuid')
-    id: string;
-    
-    @Column('text', {nullable: true})
-    address: string; // Dirección física
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-    @Column('text')
-    city: string; // Ciudad
+  @Column('text', { nullable: true })
+  address: string; // Dirección física
 
-    @Column('text')
-    state: string; // Estado
+  @Column('text')
+  city: string; // Ciudad
 
-    @Column('text')
-    country: string; // País
+  @Column('text')
+  state: string; // Estado
 
-    @Column('text', { nullable: true })
-    website: string; // Sitio web de la empresa
+  @Column('text')
+  country: string; // País
 
-    @Column('text', { nullable: true })
-    description: string; // Descripción de la empresa
+  @Column('text', { nullable: true })
+  website: string; // Sitio web de la empresa
 
-    @ManyToMany(() => Industry, (industry) => industry.companies)
-    @JoinTable({
-        name: 'company_industries',
-        joinColumn: {
-            name: 'company_id',
-            referencedColumnName: 'id'
-        },
-        inverseJoinColumn: {
-            name: 'industry_id',
-            referencedColumnName: 'id'
-        }
-    })
-    industries: Industry[];
+  @Column('text', { nullable: true })
+  description: string; // Descripción de la empresa
 
-    @Column('text', { nullable: true })
-    contact_email: string; // Correo electrónico de contacto
+  @ManyToMany(() => Industry, (industry) => industry.companies)
+  @JoinTable({
+    name: 'company_industries',
+    joinColumn: {
+      name: 'company_id',
+      referencedColumnName: 'id',
+    },
+    inverseJoinColumn: {
+      name: 'industry_id',
+      referencedColumnName: 'id',
+    },
+  })
+  industries: Industry[];
 
-    //* Definir explícitamente la columna user_id para que sea parte de la entidad
-    @Column({ type: 'uuid' })
-    user_id: string; // Esta es la columna que será utilizada para la restricción de unicidad
+  @Column('text', { nullable: true })
+  contact_email: string; // Correo electrónico de contacto
 
-    
-    //* Relación con User (FK user_id)
-    @ManyToOne(() => User, (user) => user.id, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'user_id' }) // FK en Company
-    user: User;
+  //* Definir explícitamente la columna user_id para que sea parte de la entidad
+  @Column({ type: 'uuid' })
+  user_id: string; // Esta es la columna que será utilizada para la restricción de unicidad
 
-    @OneToMany(() => Offer, (offer) => offer.company)
-    offer: Offer
+  //* Relación con User (FK user_id)
+  @ManyToOne(() => User, (user) => user.id, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'user_id' }) // FK en Company
+  user: User;
 
-    // * Tabla pivote para reclutadores y empresa
-    @ManyToMany(() => Recruiter, (recruiter) => recruiter.companies)
-    recruiters: Recruiter[];
+  @OneToMany(() => Offer, (offer) => offer.company)
+  offer: Offer;
 
+  @ManyToMany(() => Recruiter, (recruiter) => recruiter.companies)
+  @JoinTable({
+    name: 'recruiters_companies',
+    joinColumn: { name: 'company_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'recruiter_id', referencedColumnName: 'id' },
+  })
+  recruiters: Recruiter[];
 }

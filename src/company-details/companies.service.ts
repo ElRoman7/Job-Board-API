@@ -84,23 +84,25 @@ export class CompaniesService implements OnModuleInit {
 
   async findOne(id: string) : Promise<Company>{
     const company = await this.companyRepository.findOne({
-      where: {id},
+      where: { id },
       relations: {
         user: true,
         industries: true,
-      }
-    })
+        recruiters: true,
+      },
+    });
     if(!company) throw new NotFoundException(`Company with user id ${id} not found`)
     return company;
   }
 
   async findOneByUserId(id: string) : Promise<Company>{
     const company = await this.companyRepository.findOne({
-      where: {user_id: id},
+      where: { user_id: id },
       relations: {
         user: true,
-        industries: true
-      }
+        industries: true,
+        recruiters: true,
+      },
     });
     return company;
   }

@@ -6,35 +6,36 @@ import { Offer } from "src/offers/entities/offer.entity";
 @Entity('recruiter_details')
 @Unique(['user_id']) // Esto asegura que user_id sea único en la tabla
 export class Recruiter {
-    @PrimaryGeneratedColumn('uuid')
-    id: string;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-    @Column({ type: 'text', nullable: true})
-    contact_email: string;
+  @Column({ type: 'text', nullable: true })
+  contact_email: string;
 
-    @Column({ type: 'text', nullable: true })
-    specialization: string;
-    
-    //* Definir explícitamente la columna user_id para que sea parte de la entidad
-    @Column({ type: 'uuid' })
-    user_id: string; // Esta es la columna que será utilizada para la restricción de unicidad
-  
+  @Column({ type: 'text', nullable: true })
+  specialization: string;
 
-    //* Relación con User (FK user_id)
-    @ManyToOne(() => User, (user) => user.id, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'user_id' }) // FK en Recruiter
-    user: User;
+  //* Definir explícitamente la columna user_id para que sea parte de la entidad
+  @Column({ type: 'uuid' })
+  user_id: string; // Esta es la columna que será utilizada para la restricción de unicidad
 
-    @ManyToMany(() => Company)
-    @JoinTable({
-        name: 'recruiters_companies'
-    })  // Esto crea una tabla intermedia que gestiona la relación
-    companies: Company[];
+  //* Relación con User (FK user_id)
+  @ManyToOne(() => User, (user) => user.id, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'user_id' }) // FK en Recruiter
+  user: User;
 
-    //* Relacion con El Usuario(Reclutador o empresa) creador de la oferta
-    @OneToMany(() => Offer, (offer) => offer.recruiter)
-    offer: Offer;
+  @ManyToMany(() => Company, (company) => company.recruiters)
+  @JoinTable({
+    name: 'recruiters_companies',
+    joinColumn: { name: 'recruiter_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'company_id', referencedColumnName: 'id' },
+  })
+  companies: Company[];
 
-    @DeleteDateColumn({ nullable: true })
-    deletedAt?: Date; // Se llena cuando el registro es "eliminado"
+  //* Relacion con El Usuario(Reclutador o empresa) creador de la oferta
+  @OneToMany(() => Offer, (offer) => offer.recruiter)
+  offer: Offer;
+
+  @DeleteDateColumn({ nullable: true })
+  deletedAt?: Date; // Se llena cuando el registro es "eliminado"
 }

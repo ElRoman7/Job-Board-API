@@ -6,55 +6,33 @@ import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { Auth, GetUser } from 'src/auth/decorators';
 import { ValidRoles } from 'src/users/interfaces/valid-roles';
 import { User } from 'src/users/entities/user.entity';
-import { EmailToCompanyRecruiterDTO } from './dto/email-company-recruiter.dto';
 
 @Controller('recruiters')
 export class RecruitersController {
   constructor(private readonly recruitersService: RecruitersService) {}
 
   @Post()
-  create(@Body('recruiter') createRecruiterDto: CreateRecruiterDto, @Body('user') createUserDto: CreateUserDto) {
+  create(
+    @Body('recruiter') createRecruiterDto: CreateRecruiterDto,
+    @Body('user') createUserDto: CreateUserDto,
+  ) {
     return this.recruitersService.create(createRecruiterDto, createUserDto);
   }
 
   @Auth(ValidRoles.company)
   @Get('/company')
-  async getRecruitersByCompany(@GetUser() user : User) {
-    return this.recruitersService.getRecruitersByCompany(user)
+  async getRecruitersByCompany(@GetUser() user: User) {
+    return this.recruitersService.getRecruitersByCompany(user);
   }
 
-  @Auth(ValidRoles.company)
-  @Post('send-invitation')
-  async sendInvitationToRecruiter(
-    @GetUser() user: User,
-    @Body() emailToCompanyRecruiterDTO : EmailToCompanyRecruiterDTO
-  ) {
-    return await this.recruitersService.SendInvitationToRecruiter(user, emailToCompanyRecruiterDTO.email);
-  }
-
-  @Auth(ValidRoles.company)
-  @Post('/company/:token')
-  async addRecruiterToCompany(
-    @Param('token', ParseUUIDPipe,) token: string, 
-  ){
-    return await this.recruitersService.addRecruiterToCompany(token);
-  }
-
-  @Auth(ValidRoles.company)
-  @Get('/company/:token')
-  async checkRoute(
-    @Param('token', ParseUUIDPipe,) token: string, 
-  ){
-    return await this.recruitersService.checkRoute(token);
+  @Get('user/:id')
+  findRecruiterByUserId(@Param('id') id: string) {
+    return this.recruitersService.findOneByUserId(id);
   }
 
   @Get()
   findAll() {
     return this.recruitersService.findAll();
-  }
-  @Get('user/:id')
-  findRecruiterByUserId(@Param('id') id: string) {
-    return this.recruitersService.findOneByUserId(id);
   }
 
   @Get(':id')
@@ -64,7 +42,7 @@ export class RecruitersController {
 
   @Patch(':id')
   update(
-    @Param('id', ParseUUIDPipe) id: string, 
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() updateRecruiterDto: UpdateRecruiterDto,
   ) {
     return this.recruitersService.update(id, updateRecruiterDto);
@@ -76,5 +54,4 @@ export class RecruitersController {
   }
 
   //: upgradeUserToRecruiter (funcion para que un usuario se convierta en reclutador)
-
 }
