@@ -48,7 +48,7 @@ export class OffersController {
     return this.offersService.findAllAdditionalBenefit();
   }
 
-
+  //Get Offers By company or recruiters
   @Auth(ValidRoles.company, ValidRoles.recruiter)
   @Get('/company')
   findAllByCompanyId(@GetUser() user: User, @Query() paginationDto: PaginationDto) {

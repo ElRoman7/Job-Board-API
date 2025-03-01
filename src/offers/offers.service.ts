@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, NotFoundException, UnauthorizedExcepti
 import { CreateOfferDto } from './dto/create-offer.dto';
 import { UpdateOfferDto } from './dto/update-offer.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { FindOptionsWhere, In, Repository } from 'typeorm';
 import { CompaniesService } from 'src/company-details/companies.service';
 import { RecruitersService } from 'src/recruiter-details/recruiters.service';
 import { Offer } from './entities/offer.entity';
@@ -10,6 +10,7 @@ import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { User } from 'src/users/entities/user.entity';
 import { ErrorHandlerService } from 'src/common/error-handler.service';
 import { ModalityType, ContractType, ExperienceLevel, WorkArea, AdditionalBenefit } from './entities/tags.entity';
+import { Company } from 'src/company-details/entities/company.entity';
 
 @Injectable()
 export class OffersService {
@@ -94,9 +95,13 @@ export class OffersService {
 
 
   async findAll(paginationDto: PaginationDto) {
-    const { limit = 15, offset = 0 , recruiterId} = paginationDto;
+    const { limit = 15, offset = 0 , recruiterId, companyId} = paginationDto;
 
     const whereCondition: any = {};
+
+    if(companyId){
+      whereCondition.company = { id: companyId };
+    }
 
     if (recruiterId) {
       whereCondition.recruiter = { id: recruiterId };
@@ -140,8 +145,6 @@ export class OffersService {
       whereCondition.company = { user_id: user.id };
     }
   
- 
-  
     if (recruiterId) {
       whereCondition.recruiter = { id: recruiterId };
     }
@@ -166,14 +169,14 @@ export class OffersService {
       },
     });
     let total = 0
-    if(recruiterId){
-      total = offers.length
-    }else{
-      total = await this.countAll(); // Suponiendo que tienes un método para contar todas las ofertas
+    if (recruiterId) {
+      total = offers.length;
+    } else if (user.roles[0] === "company") {
+      total = await this.countAll({ company: { user_id: user.id } });
+    } else {
+      total = await this.countAll();
     }
     console.log('Filter conditions:', whereCondition);
-
-
     return { offers, total };
   }
   
@@ -201,9 +204,10 @@ export class OffersService {
   //   return { offers, total };
   // }
 
-  async countAll() {
-      return this.offerRepository.count();
+  async countAll(whereCondition?: FindOptionsWhere<Offer>) {
+    return this.offerRepository.count({ where: whereCondition });
   }
+  
 
   findOne(id: string) {
     return this.offerRepository.findOne(

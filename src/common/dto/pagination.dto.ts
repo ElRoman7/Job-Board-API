@@ -16,4 +16,8 @@ export class PaginationDto {
   @IsOptional()
   @Type(()=> String)
   recruiterId?: string;
+
+  @IsOptional()
+  @Type(()=> String)
+  companyId?: string;
 }
