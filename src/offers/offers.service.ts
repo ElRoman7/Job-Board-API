@@ -9,8 +9,13 @@ import { Offer } from './entities/offer.entity';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { User } from 'src/users/entities/user.entity';
 import { ErrorHandlerService } from 'src/common/error-handler.service';
-import { ModalityType, ContractType, ExperienceLevel, WorkArea, AdditionalBenefit } from './entities/tags.entity';
-import { Company } from 'src/company-details/entities/company.entity';
+import {
+  ModalityType,
+  ContractType,
+  ExperienceLevel,
+  WorkArea,
+  AdditionalBenefit,
+} from './entities/tags.entity';
 
 @Injectable()
 export class OffersService {
@@ -139,16 +144,16 @@ export class OffersService {
   async findAllByCompany(user: User, paginationDto: PaginationDto) {
     const { limit = 15, offset = 0, recruiterId } = paginationDto;
 
-    const whereCondition: any = { };
+    const whereCondition: any = {};
 
-    if(user.roles[0] == 'company'){
+    if (user.roles[0] == 'company') {
       whereCondition.company = { user_id: user.id };
     }
-  
+
     if (recruiterId) {
       whereCondition.recruiter = { id: recruiterId };
     }
-  
+
     const offers = await this.offerRepository.find({
       take: limit,
       skip: offset,
@@ -168,15 +173,15 @@ export class OffersService {
         additionalBenefits: true,
       },
     });
-    let total = 0
+    let total = 0;
     if (recruiterId) {
       total = offers.length;
-    } else if (user.roles[0] === "company") {
+    } else if (user.roles[0] === 'company') {
       total = await this.countAll({ company: { user_id: user.id } });
     } else {
       total = await this.countAll();
     }
-    console.log('Filter conditions:', whereCondition);
+    // console.log('Filter conditions:', whereCondition);
     return { offers, total };
   }
   
