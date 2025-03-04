@@ -25,6 +25,12 @@ export class RecruitersController {
     return this.recruitersService.getRecruitersByCompany(user);
   }
 
+  @Auth(ValidRoles.recruiter)
+  @Get('/companies')
+  async getCompaniesByRecruiter(@GetUser() user: User) {
+    return this.recruitersService.getCompaniesForRecruiter(user.id);
+  }
+
   @Get('user/:id')
   findRecruiterByUserId(@Param('id') id: string) {
     return this.recruitersService.findOneByUserId(id);

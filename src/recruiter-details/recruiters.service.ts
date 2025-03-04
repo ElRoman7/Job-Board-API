@@ -160,10 +160,25 @@ export class RecruitersService {
     return recruiters;
   }
 
-  async getCompaniesForRecruiter(recruiterId: string): Promise<Company[]> {
+  async getCompaniesForRecruiter(userId: string): Promise<Company[]> {
+    const { id: recruiterId } = await this.findOneByUserId(userId);
     const recruiter = await this.recruitersRepository.findOne({
       where: { id: recruiterId },
-      relations: ['companies'], // Asegúrate de cargar la relación 'companies'
+      relations: {
+        user: true,
+        companies: {
+          user: true,
+          industries: true,
+          offer: true,
+        },
+        offer: {
+          modalityTypes: true, // Relación con modalidad de trabajo
+          contractTypes: true, // Relación con tipos de contrato
+          experienceLevels: true, // Relación con niveles de experiencia
+          workAreas: true, // Relación con áreas de trabajo
+          additionalBenefits: true, // Relación con beneficios adicionales
+        },
+      },
     });
     if (!recruiter)
       throw new NotFoundException(`Recruiter with id ${recruiterId} not found`);
