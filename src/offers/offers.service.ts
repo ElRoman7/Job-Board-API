@@ -112,23 +112,26 @@ export class OffersService {
       whereCondition.recruiter = { id: recruiterId };
     }
     const offers = await this.offerRepository.find({
-        take: limit,
-        skip: offset,
-        where: whereCondition,
-        relations: {
-            company: {
-                user: true, // Relación con usuario de la compañía
-                industries: true // Relación con industrias
-            },
-            recruiter: {
-                user: true, // Relación con usuario del reclutador
-            },
-            modalityTypes: true, // Relación con modalidad de trabajo
-            contractTypes: true, // Relación con tipos de contrato
-            experienceLevels: true, // Relación con niveles de experiencia
-            workAreas: true, // Relación con áreas de trabajo
-            additionalBenefits: true, // Relación con beneficios adicionales
+      take: limit,
+      skip: offset,
+      where: whereCondition,
+      relations: {
+        company: {
+          user: true, // Relación con usuario de la compañía
+          industries: true, // Relación con industrias
         },
+        recruiter: {
+          user: true, // Relación con usuario del reclutador
+        },
+        modalityTypes: true, // Relación con modalidad de trabajo
+        contractTypes: true, // Relación con tipos de contrato
+        experienceLevels: true, // Relación con niveles de experiencia
+        workAreas: true, // Relación con áreas de trabajo
+        additionalBenefits: true, // Relación con beneficios adicionales
+        applications: {
+          candidate: true,
+        },
+      },
     });
     console.log(offers);
 
@@ -171,6 +174,9 @@ export class OffersService {
         experienceLevels: true,
         workAreas: true,
         additionalBenefits: true,
+        applications: {
+          candidate: true,
+        },
       },
     });
     let total = 0;
@@ -215,25 +221,26 @@ export class OffersService {
   
 
   findOne(id: string) {
-    return this.offerRepository.findOne(
-      {where: {id}, 
+    return this.offerRepository.findOne({
+      where: { id },
       relations: {
         company: {
-            user: true, // Relación con usuario de la compañía
-            industries: true // Relación con industrias
+          user: true, // Relación con usuario de la compañía
+          industries: true, // Relación con industrias
         },
         recruiter: {
-            user: true, // Relación con usuario del reclutador
+          user: true, // Relación con usuario del reclutador
         },
         modalityTypes: true, // Relación con modalidad de trabajo
         contractTypes: true, // Relación con tipos de contrato
         experienceLevels: true, // Relación con niveles de experiencia
         workAreas: true, // Relación con áreas de trabajo
         additionalBenefits: true, // Relación con beneficios adicionales
-    },
-    }
-      
-    );
+        applications: {
+          candidate: true,
+        },
+      },
+    });
   }
   //ToDo:
   findByCompany(){
