@@ -1,4 +1,4 @@
-import { Controller, Post, Body} from '@nestjs/common';
+import { Controller, Post, Body, Get } from '@nestjs/common';
 import { ApplicationsService } from './applications.service';
 import { ApplicationDto } from './dto/create-application.dto';
 import { Auth, GetUser } from 'src/auth/decorators';
@@ -15,4 +15,9 @@ export class ApplicationsController {
     return this.applicationsService.apply(applicationDto, user);
   }
 
+  @Auth(ValidRoles.company)
+  @Get('company')
+  getTotalApplications(@GetUser() user: User) {
+    return this.applicationsService.getTotalApplications(user);
+  }
 }
