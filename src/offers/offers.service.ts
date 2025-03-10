@@ -237,7 +237,9 @@ export class OffersService {
         workAreas: true, // Relación con áreas de trabajo
         additionalBenefits: true, // Relación con beneficios adicionales
         applications: {
-          candidate: true,
+          candidate: {
+            user: true,
+          },
         },
       },
     });

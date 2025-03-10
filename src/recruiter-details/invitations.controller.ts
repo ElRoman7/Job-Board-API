@@ -1,11 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  ParseUUIDPipe,
-  Post,
-} from '@nestjs/common';
+import { Body, Controller, Param, ParseUUIDPipe, Post } from '@nestjs/common';
 import { Auth, GetUser } from 'src/auth/decorators';
 import { User } from 'src/users/entities/user.entity';
 import { ValidRoles } from 'src/users/interfaces/valid-roles';
