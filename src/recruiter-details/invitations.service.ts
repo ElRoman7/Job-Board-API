@@ -143,7 +143,7 @@ export class InvitationsService {
       throw new InternalServerErrorException('Error saving invitation');
     }
 
-    const url = `${this.mailService.frontUrl}/company-request/${token}`;
+    const url = `${this.mailService.frontUrl}/recruiter/invitations`;
     try {
       await this.mailService.sendRecruiterCompanyRequest(
         recruiter,
