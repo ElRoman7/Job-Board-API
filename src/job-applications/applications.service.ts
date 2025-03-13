@@ -4,9 +4,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Application } from './entities/application.entity';
 import { Repository } from 'typeorm';
 import { ErrorHandlerService } from 'src/common/error-handler.service';
-import { CandidateService } from 'src/candidate-details/candidate.service';
 import { User } from 'src/users/entities/user.entity';
 import { OffersService } from 'src/offers/offers.service';
+import { CandidateService } from 'src/candidate-details/services/candidate.service';
 
 @Injectable()
 export class ApplicationsService {
