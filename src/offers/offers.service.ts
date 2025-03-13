@@ -102,7 +102,7 @@ export class OffersService {
   async findAll(paginationDto: PaginationDto) {
     const { limit = 15, offset = 0 , recruiterId, companyId} = paginationDto;
 
-    const whereCondition: any = {};
+    const whereCondition: any = { status: 'published' };
 
     if(companyId){
       whereCondition.company = { id: companyId };
