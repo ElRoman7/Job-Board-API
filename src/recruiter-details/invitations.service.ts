@@ -157,4 +157,16 @@ export class InvitationsService {
       );
     }
   }
+
+  async getInvitationsByRecruiter(user: User) {
+    const recruiter = await this.recruitersService.findOneByUserId(user.id);
+    if (!recruiter) {
+      throw new NotFoundException('Recruiter Not Founded');
+    }
+    const invitations = await this.invitationsRepository.find({
+      where: { recruiter: { id: user.id } },
+    });
+
+    return invitations;
+  }
 }

@@ -21,6 +21,12 @@ export class InvitationsController {
     );
   }
 
+  @Auth(ValidRoles.recruiter)
+  @Post('')
+  async getInvitationsByUser(@GetUser() user: User) {
+    return await this.invitationsService.getInvitationsByRecruiter(user);
+  }
+
   @Post('/:token')
   async addRecruiterToCompany(@Param('token', ParseUUIDPipe) token: string) {
     return await this.invitationsService.addRecruiterToCompany(token);
