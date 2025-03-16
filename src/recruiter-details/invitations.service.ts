@@ -15,6 +15,7 @@ import { UsersService } from 'src/users/users.service';
 import { EncoderService } from 'src/common/encoder.service';
 import { MailService } from 'src/mail/mail.service';
 import { executeWithTransaction } from 'src/common/utils/query-runner.util';
+import { NotificationsService } from '../notifications-ws/notifications.service';
 
 @Injectable()
 export class InvitationsService {
@@ -28,6 +29,7 @@ export class InvitationsService {
     private readonly dataSource: DataSource,
     private readonly encoderService: EncoderService,
     private readonly mailService: MailService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async checkRoute(token: string): Promise<boolean> {
@@ -156,6 +158,13 @@ export class InvitationsService {
         `Error sending email to ${emailRecruiter}`,
       );
     }
+    const message = `Has recibido una invitación de ${company.user.name} para ser parte de su red de reclutamiento`;
+
+    await this.notificationsService.createNotification(
+      recruiter.user.id,
+      message,
+      `/recruiters/companies`,
+    );
   }
 
   async getInvitationsByRecruiter(user: User) {

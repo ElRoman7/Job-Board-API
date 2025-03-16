@@ -77,7 +77,7 @@ export class CvService {
       });
 
       const rawResponse = response.choices[0].message.content;
-      console.log('Respuesta cruda de la API:', rawResponse);
+      //console.log('Respuesta cruda de la API:', rawResponse);
       const respuesta = JSON.parse(rawResponse);
 
       const requiredFields = ['nombre', 'email', 'experiencia', 'educacion'];

@@ -1,5 +1,6 @@
 import { Exclude } from "class-transformer";
-import { BeforeInsert, BeforeUpdate, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { BeforeInsert, BeforeUpdate, Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Notification } from "src/notifications-ws/entities/notification.entity";
 
 @Entity('users')
 export class User{
@@ -42,6 +43,9 @@ export class User{
   
     @Column({ type: 'timestamp', nullable: true, onUpdate: 'CURRENT_TIMESTAMP' })
     updated_at: Date;
+
+    @OneToMany(() => Notification, notification => notification.user)
+    notifications: Notification[];
     
 
 

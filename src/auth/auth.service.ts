@@ -39,7 +39,7 @@ export class AuthService {
     return token;
   }
 
-  async checkAuthStatus(user: User): Promise <LoginResponseDto> {
+  async refresh(user: User): Promise <LoginResponseDto> {
     const token = await this.getJwt({ id: user.id });
     return {
       id: user.id,

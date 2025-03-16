@@ -10,6 +10,7 @@ import { CompaniesModule } from 'src/company-details/companies.module';
 import { MailModule } from 'src/mail/mail.module';
 import { InvitationsService } from './invitations.service';
 import { InvitationsController } from './invitations.controller';
+import { NotificationsWsModule } from 'src/notifications-ws/notifications-ws.module';
 
 @Module({
   controllers: [RecruitersController, InvitationsController],
@@ -21,6 +22,7 @@ import { InvitationsController } from './invitations.controller';
     CompaniesModule,
     AuthModule,
     MailModule,
+    NotificationsWsModule,
   ],
   exports: [TypeOrmModule, RecruitersService],
 })

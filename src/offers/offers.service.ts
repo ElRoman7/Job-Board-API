@@ -100,11 +100,11 @@ export class OffersService {
 
 
   async findAll(paginationDto: PaginationDto) {
-    const { limit = 15, offset = 0 , recruiterId, companyId} = paginationDto;
+    const { limit = 15, offset = 0, recruiterId, companyId } = paginationDto;
 
     const whereCondition: any = { status: 'published' };
 
-    if(companyId){
+    if (companyId) {
       whereCondition.company = { id: companyId };
     }
 
@@ -133,12 +133,12 @@ export class OffersService {
         },
       },
     });
-    console.log(offers);
+    //console.log(offers);
 
-    let total = 0
-    if(recruiterId){
-      total = offers.length
-    }else{
+    let total = 0;
+    if (recruiterId) {
+      total = offers.length;
+    } else {
       total = await this.countAll(); // Suponiendo que tienes un método para contar todas las ofertas
     }
     return { offers, total, recruiterId };

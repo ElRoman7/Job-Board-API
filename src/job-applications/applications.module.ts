@@ -7,11 +7,19 @@ import { AuthModule } from 'src/auth/auth.module';
 import { CommonModule } from 'src/common/common.module';
 import { CandidateModule } from 'src/candidate-details/candidate.module';
 import { OffersModule } from 'src/offers/offers.module';
+import { NotificationsWsModule } from 'src/notifications-ws/notifications-ws.module';
 
 @Module({
-  controllers: [ ApplicationsController],
-  imports: [ TypeOrmModule.forFeature([Application]) , AuthModule, CommonModule, CandidateModule, OffersModule],
+  controllers: [ApplicationsController],
+  imports: [
+    TypeOrmModule.forFeature([Application]),
+    AuthModule,
+    CommonModule,
+    CandidateModule,
+    OffersModule,
+    NotificationsWsModule,
+  ],
   providers: [ApplicationsService],
-  exports: [TypeOrmModule, ApplicationsService]
+  exports: [TypeOrmModule, ApplicationsService],
 })
 export class ApplicationsModule {}

@@ -1,9 +1,10 @@
-import { Controller, Post, Body, Get } from '@nestjs/common';
+import { Controller, Post, Body, Get, Patch, Param, ParseUUIDPipe } from '@nestjs/common';
 import { ApplicationsService } from './applications.service';
 import { ApplicationDto } from './dto/create-application.dto';
 import { Auth, GetUser } from 'src/auth/decorators';
 import { ValidRoles } from 'src/users/interfaces/valid-roles';
 import { User } from 'src/users/entities/user.entity';
+import { UpdateApplicationDto } from './dto/update-application.dto';
 
 @Controller('job-applications')
 export class ApplicationsController {
@@ -19,5 +20,12 @@ export class ApplicationsController {
   @Get('company')
   getTotalApplications(@GetUser() user: User) {
     return this.applicationsService.getTotalApplications(user);
+  }
+
+  @Auth(ValidRoles.company)
+  @Patch(':id')
+  updateJobApplyStatus(@Body() updateApplicationDto: UpdateApplicationDto, @Param('id', ParseUUIDPipe) id: string) {
+    const { status } = updateApplicationDto
+    return this.applicationsService.updateApplicationStatus(id, status)
   }
 }
