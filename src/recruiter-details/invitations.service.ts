@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -14,7 +13,6 @@ import { CompaniesService } from 'src/company-details/companies.service';
 import { UsersService } from 'src/users/users.service';
 import { EncoderService } from 'src/common/encoder.service';
 import { MailService } from 'src/mail/mail.service';
-import { executeWithTransaction } from 'src/common/utils/query-runner.util';
 import { NotificationsService } from '../notifications-ws/notifications.service';
 
 @Injectable()
@@ -51,68 +49,10 @@ export class InvitationsService {
     return await this.invitationsRepository.findOne({ where: { token } });
   }
 
-  async addRecruiterToCompany(token: string) {
-    return await executeWithTransaction(
-      this.dataSource,
-      async (queryRunner) => {
-        // Find invitation and validate
-        const invitation = await this.invitationsRepository.findOne({
-          where: { token },
-          relations: ['recruiter', 'company'],
-        });
-        if (!invitation) {
-          throw new NotFoundException('Invitation not found');
-        }
-
-        if (invitation.status !== 'PENDING') {
-          throw new BadRequestException('Invitation is no longer pending');
-        }
-
-        // Get company and recruiter with their relationships
-        const company = await this.companiesService.findOne(
-          invitation.company.id,
-        );
-        if (!company) {
-          throw new NotFoundException('Company not found');
-        }
-
-        const recruiter = await this.recruitersService.findOne(
-          invitation.recruiter.id,
-        );
-        if (!recruiter) {
-          throw new NotFoundException('Recruiter not found');
-        }
-
-        try {
-          // Establish the many-to-many relationship
-          if (!company.recruiters) company.recruiters = [];
-          if (!recruiter.companies) recruiter.companies = [];
-
-          company.recruiters.push(recruiter);
-          recruiter.companies.push(company);
-
-          // Update invitation status
-          invitation.status = 'ACCEPTED';
-
-          // Save all entities
-          await queryRunner.manager.save(company);
-          await queryRunner.manager.save(recruiter);
-          await queryRunner.manager.save(invitation);
-
-          return {
-            message: 'Recruiter successfully added to company',
-          };
-        } catch (error) {
-          throw this.errorHandlerService.handleDBException(error);
-        }
-      },
-    );
-  }
-
   async SendInvitationToRecruiter(
     userCompany: User,
     emailRecruiter: string,
-  ): Promise<void> {
+  ): Promise<{ message: string }> {
     const company = await this.companiesService.findOneByUserId(userCompany.id);
     if (!company) {
       throw new NotFoundException('Company not found');
@@ -130,6 +70,26 @@ export class InvitationsService {
       throw new NotFoundException('Recruiter not found');
     }
 
+    // Check if there's an existing invitation
+    const existingInvitation = await this.invitationsRepository.findOne({
+      where: {
+        company: { id: company.id },
+        recruiter: { id: recruiter.id },
+      },
+      relations: ['company', 'recruiter'],
+    });
+
+    // If there's an existing invitation that's pending or accepted, don't allow a new one
+    if (existingInvitation) {
+      if (existingInvitation.status === 'ACCEPTED') {
+        return { message: `El reclutador ya forma parte de tu red de reclutamiento` };
+      }
+      
+      if (existingInvitation.status === 'PENDING') {
+        return { message: `Ya existe una invitación pendiente para este reclutador` };
+      }
+    }
+
     // Crear la invitación en la base de datos
     const token = await this.encoderService.generateToken();
     const invitation = new Invitation();
@@ -145,7 +105,7 @@ export class InvitationsService {
       throw new InternalServerErrorException('Error saving invitation');
     }
 
-    const url = `${this.mailService.frontUrl}/recruiter/invitations`;
+    const url = `${this.mailService.frontUrl}/recruiter/companies`;
     try {
       await this.mailService.sendRecruiterCompanyRequest(
         recruiter,
@@ -165,6 +125,8 @@ export class InvitationsService {
       message,
       `/recruiters/companies`,
     );
+
+    return { message: 'Invitación enviada exitosamente' };
   }
 
   async getInvitationsByRecruiter(user: User) {
@@ -173,9 +135,37 @@ export class InvitationsService {
       throw new NotFoundException('Recruiter Not Founded');
     }
     const invitations = await this.invitationsRepository.find({
-      where: { recruiter: { id: user.id } },
+      where: { recruiter: { user: { id: user.id } }, status: 'PENDING' },
+      relations: {
+        company: { user: true },
+        recruiter: { user: true },
+      },
     });
+    console.log(invitations);
 
     return invitations;
+  }
+
+  async setInvitationResponse(
+    user: User,
+    id: string,
+    response: 'accept' | 'reject',
+  ) {
+    const invitation = await this.invitationsRepository.findOne({
+      where: { id },
+    });
+
+    if (!invitation) {
+      throw new NotFoundException('Invitation not found');
+    }
+
+    if (response === 'accept') {
+      invitation.status = 'ACCEPTED';
+    } else {
+      invitation.status = 'REJECTED';
+    }
+
+    await this.invitationsRepository.save(invitation);
+    return { message: `Invitation ${response}ed successfully.` };
   }
 }

@@ -11,8 +11,8 @@ export class NotificationsController {
 
   @Auth(ValidRoles.candidate, ValidRoles.company, ValidRoles.recruiter)
   @Patch('/read/:id')
-  markAsARead(@Param('id', ParseUUIDPipe) id : string, @GetUser() user: User) {
-    return this.notificationsService.markNotificationAsRead(id, user.id)
+  markAsARead(@Param('id', ParseUUIDPipe) id: string, @GetUser() user: User) {
+    return this.notificationsService.markNotificationAsRead(id, user.id);
   }
 
   /**
@@ -31,7 +31,7 @@ export class NotificationsController {
    * GET /notifications/read
    */
   @Auth(ValidRoles.candidate, ValidRoles.company, ValidRoles.recruiter)
-  @Get(':status?')
+  @Get(':status')
   getNotifications(@GetUser() user: User, @Param('status') status?: string) {
     const getActive = status === 'active';
     return this.notificationsService.getUserNotifications(user.id, getActive);

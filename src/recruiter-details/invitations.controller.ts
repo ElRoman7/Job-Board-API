@@ -1,4 +1,13 @@
-import { Body, Controller, Param, ParseUUIDPipe, Post } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import { Auth, GetUser } from 'src/auth/decorators';
 import { User } from 'src/users/entities/user.entity';
 import { ValidRoles } from 'src/users/interfaces/valid-roles';
@@ -22,13 +31,27 @@ export class InvitationsController {
   }
 
   @Auth(ValidRoles.recruiter)
-  @Post('')
+  @Get('')
   async getInvitationsByUser(@GetUser() user: User) {
     return await this.invitationsService.getInvitationsByRecruiter(user);
   }
 
-  @Post('/:token')
-  async addRecruiterToCompany(@Param('token', ParseUUIDPipe) token: string) {
-    return await this.invitationsService.addRecruiterToCompany(token);
+  @Auth(ValidRoles.recruiter)
+  @Post(':id/:response')
+  async setInvitationResponse(
+    @GetUser() user: User,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('response') response: string,
+  ) {
+    if (!['accept', 'reject'].includes(response)) {
+      throw new BadRequestException(
+        'Invalid response. Must be "accept" or "reject".',
+      );
+    }
+    return await this.invitationsService.setInvitationResponse(
+      user,
+      id,
+      response as 'accept' | 'reject',
+    );
   }
 }
