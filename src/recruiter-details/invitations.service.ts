@@ -1,7 +1,9 @@
 import {
+  BadRequestException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Invitation } from './entities/invitations.entity';
@@ -14,6 +16,7 @@ import { UsersService } from 'src/users/users.service';
 import { EncoderService } from 'src/common/encoder.service';
 import { MailService } from 'src/mail/mail.service';
 import { NotificationsService } from '../notifications-ws/notifications.service';
+import { executeWithTransaction } from 'src/common/utils/query-runner.util';
 
 @Injectable()
 export class InvitationsService {
@@ -82,11 +85,15 @@ export class InvitationsService {
     // If there's an existing invitation that's pending or accepted, don't allow a new one
     if (existingInvitation) {
       if (existingInvitation.status === 'ACCEPTED') {
-        return { message: `El reclutador ya forma parte de tu red de reclutamiento` };
+        return {
+          message: `El reclutador ya forma parte de tu red de reclutamiento`,
+        };
       }
-      
+
       if (existingInvitation.status === 'PENDING') {
-        return { message: `Ya existe una invitación pendiente para este reclutador` };
+        return {
+          message: `Ya existe una invitación pendiente para este reclutador`,
+        };
       }
     }
 
@@ -153,19 +160,134 @@ export class InvitationsService {
   ) {
     const invitation = await this.invitationsRepository.findOne({
       where: { id },
+      relations: ['recruiter', 'recruiter.user', 'company'],
     });
 
     if (!invitation) {
       throw new NotFoundException('Invitation not found');
     }
 
-    if (response === 'accept') {
-      invitation.status = 'ACCEPTED';
-    } else {
-      invitation.status = 'REJECTED';
+    const recruiter = await this.recruitersService.findOneByUserId(user.id);
+    if (!recruiter) {
+      throw new NotFoundException('Recruiter not found');
     }
 
-    await this.invitationsRepository.save(invitation);
-    return { message: `Invitation ${response}ed successfully.` };
+    const company = await this.companiesService.findOne(invitation.company.id);
+    if (!company) {
+      throw new NotFoundException('Company not found');
+    }
+
+    if (
+      invitation.company.id != company.id ||
+      invitation.recruiter.id != recruiter.id
+    ) {
+      throw new UnauthorizedException("User can't accept the invitation"); //No es la invitacion para el usuario que la quiere aceptar
+    }
+
+    return await executeWithTransaction(
+      this.dataSource,
+      async (queryRunner) => {
+        if (response === 'accept') {
+          try {
+            // Establish the many-to-many relationship
+            if (!company.recruiters) company.recruiters = [];
+            if (!recruiter.companies) recruiter.companies = [];
+
+            company.recruiters.push(recruiter);
+            recruiter.companies.push(company);
+
+            // Update invitation status
+            invitation.status = 'ACCEPTED';
+
+            // Save all entities
+            await queryRunner.manager.save(company);
+            await queryRunner.manager.save(recruiter);
+            await queryRunner.manager.save(invitation);
+
+            return {
+              message: 'Recruiter successfully added to company',
+            };
+          } catch (error) {
+            throw this.errorHandlerService.handleDBException(error);
+          }
+        } else {
+          invitation.status = 'REJECTED';
+          await queryRunner.manager.save(invitation);
+          return { message: `Invitation rejected successfully.` };
+        }
+      },
+    );
+  }
+
+  async addRecruiterToCompany(token: string) {
+    return await executeWithTransaction(
+      this.dataSource,
+
+      async (queryRunner) => {
+        // Find invitation and validate
+
+        const invitation = await this.invitationsRepository.findOne({
+          where: { token },
+
+          relations: ['recruiter', 'company'],
+        });
+
+        if (!invitation) {
+          throw new NotFoundException('Invitation not found');
+        }
+
+        if (invitation.status !== 'PENDING') {
+          throw new BadRequestException('Invitation is no longer pending');
+        }
+
+        // Get company and recruiter with their relationships
+
+        const company = await this.companiesService.findOne(
+          invitation.company.id,
+        );
+
+        if (!company) {
+          throw new NotFoundException('Company not found');
+        }
+
+        const recruiter = await this.recruitersService.findOne(
+          invitation.recruiter.id,
+        );
+
+        if (!recruiter) {
+          throw new NotFoundException('Recruiter not found');
+        }
+
+        try {
+          // Establish the many-to-many relationship
+
+          if (!company.recruiters) company.recruiters = [];
+
+          if (!recruiter.companies) recruiter.companies = [];
+
+          company.recruiters.push(recruiter);
+
+          recruiter.companies.push(company);
+
+          // Update invitation status
+
+          invitation.status = 'ACCEPTED';
+
+          // Save all entities
+
+          await queryRunner.manager.save(company);
+
+          await queryRunner.manager.save(recruiter);
+
+          await queryRunner.manager.save(invitation);
+
+          return {
+            message: 'Recruiter successfully added to company',
+          };
+        } catch (error) {
+          throw this.errorHandlerService.handleDBException(error);
+        }
+      },
+    );
   }
 }

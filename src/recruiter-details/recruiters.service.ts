@@ -90,7 +90,29 @@ export class RecruitersService {
   async findOneByUserId(id: string) {
     const recruiter = await this.recruitersRepository.findOne({
       where: { user_id: id },
-      relations: ['user', 'companies', 'offer'],
+      relations: {
+        user: true,
+        companies: {
+          user: true,
+        },
+        offer: {
+          company: {
+            user: true,
+            industries: true,
+          },
+          recruiter: {
+            user: true,
+          },
+          modalityTypes: true,
+          contractTypes: true,
+          experienceLevels: true,
+          workAreas: true,
+          additionalBenefits: true,
+          applications: {
+            candidate: true,
+          },
+        },
+      },
     });
     // if(!recruiter) throw new NotFoundException(`Recruiter with id ${id} not found`)
     return recruiter;
@@ -160,8 +182,27 @@ export class RecruitersService {
     return recruiters;
   }
 
-  async getCompaniesForRecruiter(userId: string): Promise<Company[]> {
-    const { id: recruiterId } = await this.findOneByUserId(userId);
+  async getCompaniesForRecruiter(id: string): Promise<Company[]> {
+    let recruiterData: Recruiter;
+
+    try {
+      // First try to find by user ID
+      recruiterData = await this.findOneByUserId(id);
+
+      // If not found by user ID, try to find by recruiter ID
+      if (!recruiterData) {
+        recruiterData = await this.findOne(id);
+      }
+    } catch (e) {
+      this.errorHandlerService.handleDBException(e);
+      throw new NotFoundException(`Recruiter with ID ${id} not found`);
+    }
+
+    if (!recruiterData) {
+      throw new NotFoundException(`Recruiter with ID ${id} not found`);
+    }
+
+    const { id: recruiterId } = recruiterData;
     const recruiter = await this.recruitersRepository.findOne({
       where: { id: recruiterId },
       relations: {
@@ -185,6 +226,4 @@ export class RecruitersService {
 
     return recruiter.companies;
   }
-
-  
 }

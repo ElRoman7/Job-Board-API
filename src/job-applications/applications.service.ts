@@ -52,6 +52,21 @@ export class ApplicationsService {
     }
   }
 
+  async getApplicationsByUser(userId: string) {
+    const applications = this.applicationRepository.find({
+      where: { candidate: { user: { id: userId } } },
+      relations: {
+        candidate: {
+          user: true,
+        },
+        offer: {
+          company: { user: true },
+        },
+      },
+    });
+    return applications;
+  }
+
   async findOneApplication(
     candidateId: string,
     offerId: string,
@@ -96,6 +111,7 @@ export class ApplicationsService {
     });
     return totalApplications.length;
   }
+
   async updateApplicationStatus(applicationId: string, status: string) {
     // Check if the provided status is valid
     const validStatuses = Object.values(ValidJobApplicationStatus);

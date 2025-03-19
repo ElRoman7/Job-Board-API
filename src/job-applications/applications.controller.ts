@@ -16,16 +16,25 @@ export class ApplicationsController {
     return this.applicationsService.apply(applicationDto, user);
   }
 
+  @Auth(ValidRoles.candidate)
+  @Get('')
+  getApplicationsByUser(@GetUser() user: User) {
+    return this.applicationsService.getApplicationsByUser(user.id);
+  }
+
   @Auth(ValidRoles.company)
-  @Get('company')
+  @Get('total')
   getTotalApplications(@GetUser() user: User) {
     return this.applicationsService.getTotalApplications(user);
   }
 
   @Auth(ValidRoles.company)
   @Patch(':id')
-  updateJobApplyStatus(@Body() updateApplicationDto: UpdateApplicationDto, @Param('id', ParseUUIDPipe) id: string) {
-    const { status } = updateApplicationDto
-    return this.applicationsService.updateApplicationStatus(id, status)
+  updateJobApplyStatus(
+    @Body() updateApplicationDto: UpdateApplicationDto,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    const { status } = updateApplicationDto;
+    return this.applicationsService.updateApplicationStatus(id, status);
   }
 }

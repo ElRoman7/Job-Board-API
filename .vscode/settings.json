@@ -4,7 +4,6 @@
     "editor.fontLigatures": false,
     "editor.fontWeight": "normal",
     "editor.fontSize": 14,
-    "editor.tabSize": 2,
     "editor.insertSpaces": true,
     "editor.formatOnSave": true,
     "editor.formatOnType": true,
