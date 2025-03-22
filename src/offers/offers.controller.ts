@@ -9,49 +9,51 @@ import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Controller('offers')
 export class OffersController {
-  constructor(
-    private readonly offersService: OffersService,  
-  ) {}
+  constructor(private readonly offersService: OffersService) {}
 
   @Auth(ValidRoles.recruiter, ValidRoles.company)
   @Post()
   create(@Body() createOfferDto: CreateOfferDto, @GetUser() user: User) {
     return this.offersService.create(createOfferDto, user);
   }
-  
+  //Usado por candidates o usuarios no autenticados
   @Get()
   findAll(@Query() paginationDto: PaginationDto) {
     return this.offersService.findAll(paginationDto);
   }
+
   @Get('/modality-types')
-  findAllModalityTypes(){
+  findAllModalityTypes() {
     return this.offersService.findAllModalityType();
   }
 
   @Get('/contract-types')
-  findAllContractTypes(){
+  findAllContractTypes() {
     return this.offersService.findAllContractType();
   }
 
   @Get('/experience-levels')
-  findAllExperienceLevels(){
+  findAllExperienceLevels() {
     return this.offersService.findAllExperienceLevel();
   }
 
   @Get('/work-areas')
-  findAllWorkAreas(){
+  findAllWorkAreas() {
     return this.offersService.findAllWorkArea();
   }
 
   @Get('/additional-benefits')
-  findAllAdditionalBenefits(){
+  findAllAdditionalBenefits() {
     return this.offersService.findAllAdditionalBenefit();
   }
 
   //Get Offers By company or recruiters
   @Auth(ValidRoles.company, ValidRoles.recruiter)
   @Get('/company')
-  findAllByCompanyId(@GetUser() user: User, @Query() paginationDto: PaginationDto) {
+  findAllByCompanyId(
+    @GetUser() user: User,
+    @Query() paginationDto: PaginationDto,
+  ) {
     return this.offersService.findAllByCompany(user, paginationDto);
   }
 
@@ -61,8 +63,6 @@ export class OffersController {
   //   return this.offersService.findAllByCompanyId(companyId, paginationDto);
   // }
 
-
-
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.offersService.findOne(id);
@@ -70,13 +70,17 @@ export class OffersController {
 
   @Auth(ValidRoles.recruiter, ValidRoles.company)
   @Get('/company/:id')
-  findAllByCompany(@Param('id', ParseUUIDPipe) companyId: string){
+  findAllByCompany(@Param('id', ParseUUIDPipe) companyId: string) {
     return companyId;
   }
 
   @Auth(ValidRoles.recruiter, ValidRoles.company)
   @Patch(':id')
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() updateOfferDto: UpdateOfferDto, @GetUser() user: User) {
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateOfferDto: UpdateOfferDto,
+    @GetUser() user: User,
+  ) {
     return this.offersService.update(id, updateOfferDto, user);
   }
 

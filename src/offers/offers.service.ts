@@ -165,6 +165,7 @@ export class OffersService {
       experienceLevelIds,
       workAreaIds,
       additionalBenefitIds,
+      searchTerm = '',
     } = paginationDto;
 
     const whereCondition: any = { status: 'published' };
@@ -195,6 +196,15 @@ export class OffersService {
       .where(whereCondition)
       .take(limit)
       .skip(offset);
+
+    if (searchTerm) {
+      queryBuilder.andWhere(
+        'LOWER(offer.title) LIKE LOWER(:searchTerm) OR LOWER(offer.description) LIKE LOWER(:searchTerm)',
+        {
+          searchTerm: `%${searchTerm}%`,
+        },
+      );
+    }
 
     // Apply tag filters if provided
     if (modalityTypeIds && modalityTypeIds.length > 0) {
@@ -252,7 +262,7 @@ export class OffersService {
 
   async findAllByCompany(user: User, paginationDto: PaginationDto) {
     const { limit = 15, offset = 0, recruiterId, companyId } = paginationDto;
-    
+
     // Get user's company ID if the user is a company
     let userCompanyId: string = null;
     if (user.roles.includes('company')) {
@@ -261,7 +271,7 @@ export class OffersService {
         userCompanyId = company.id;
       }
     }
-    
+
     // Build query builder for more complex filters
     const queryBuilder = this.offerRepository
       .createQueryBuilder('offer')
@@ -277,7 +287,7 @@ export class OffersService {
       .leftJoinAndSelect('offer.additionalBenefits', 'additionalBenefits')
       .leftJoinAndSelect('offer.applications', 'applications')
       .leftJoinAndSelect('applications.candidate', 'candidate');
-      
+
     // If user is a company, always filter by their company ID
     if (userCompanyId) {
       queryBuilder.andWhere('company.id = :userCompanyId', { userCompanyId });

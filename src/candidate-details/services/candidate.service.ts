@@ -73,6 +73,13 @@ export class CandidateService {
       relations: {
         user: true,
         cv: true,
+        applications: {
+          offer: {
+            company: {
+              user: true,
+            },
+          },
+        },
       },
     });
   }

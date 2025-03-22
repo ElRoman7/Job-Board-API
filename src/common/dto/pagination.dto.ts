@@ -1,5 +1,12 @@
 import { Type, Transform } from 'class-transformer';
-import { IsOptional, IsPositive, Min, IsArray, IsUUID } from 'class-validator';
+import {
+  IsOptional,
+  IsPositive,
+  Min,
+  IsArray,
+  IsUUID,
+  IsString,
+} from 'class-validator';
 
 export class PaginationDto {
   @IsOptional()
@@ -56,4 +63,8 @@ export class PaginationDto {
     Array.isArray(value) ? value.map(Number) : [Number(value)],
   )
   additionalBenefitIds?: number[];
+
+  @IsOptional()
+  @IsString()
+  searchTerm?: string;
 }
