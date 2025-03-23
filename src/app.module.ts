@@ -11,6 +11,7 @@ import { MailModule } from 'src/mail/mail.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { CandidateModule } from './candidate-details/candidate.module';
 import { NotificationsWsModule } from './notifications-ws/notifications-ws.module';
+import { SkillsModule } from './skills/skills.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { NotificationsWsModule } from './notifications-ws/notifications-ws.modul
     CloudinaryModule,
     CandidateModule,
     NotificationsWsModule,
+    SkillsModule,
   ],
 })
 export class AppModule {}

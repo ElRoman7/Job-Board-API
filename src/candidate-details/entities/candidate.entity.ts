@@ -1,14 +1,17 @@
 import { Application } from "src/job-applications/entities/application.entity";
 import { User } from "src/users/entities/user.entity";
+import { Skill } from 'src/skills/entities/skill.entity';
 import {
   Column,
   Entity,
   JoinColumn,
+  ManyToMany,
   ManyToOne,
   OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
   Unique,
+  JoinTable,
 } from 'typeorm';
 import { CvEntity } from './cv.entity';
 
@@ -50,4 +53,14 @@ export class Candidate {
 
   @OneToOne(() => CvEntity, (cv) => cv.candidate)
   cv: CvEntity;
+
+  @ManyToMany(() => Skill, (skill) => skill.candidates, {
+    eager: true,
+  })
+  @JoinTable({
+    name: 'candidate_skills',
+    joinColumn: { name: 'candidate_id' },
+    inverseJoinColumn: { name: 'skill_id' },
+  })
+  skills: Skill[];
 }

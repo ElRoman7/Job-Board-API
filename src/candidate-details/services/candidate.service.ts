@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { executeWithTransaction } from 'src/common/utils/query-runner.util';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
@@ -11,6 +15,8 @@ import { MailService } from 'src/mail/mail.service';
 import { Candidate } from '../entities/candidate.entity';
 import { CreateCandidateDto } from '../dto/create-candidate.dto';
 import { UpdateCandidateDto } from '../dto/update-candidate.dto';
+import { SkillsService } from 'src/skills/skills.service';
+import { AddSkillDto } from '../dto/add-skill.dto';
 
 @Injectable()
 export class CandidateService {
@@ -21,6 +27,7 @@ export class CandidateService {
     private readonly dataSource: DataSource,
     private readonly errrorHandlerService: ErrorHandlerService,
     private readonly mailService: MailService,
+    private readonly skillsService: SkillsService,
   ) {}
 
   async create(
@@ -130,6 +137,58 @@ export class CandidateService {
       message: 'CV updated successfully',
     };
   }
+
+  async save(candidate: Candidate): Promise<Candidate> {
+    return await this.candidateRepository.save(candidate);
+  }
+
+  async addSkillToCandidate(addSkillDto: AddSkillDto, user: User) {
+    try {
+      const candidate = await this.findOneByUserId(user.id);
+      if (!candidate) throw new NotFoundException('Candidate Not Found');
+
+      const skills = await this.skillsService.findOrCreate(addSkillDto.skill);
+      candidate.skills = skills;
+      await this.save(candidate);
+      
+      return {
+        message: 'Skills added successfully'
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      this.errrorHandlerService.handleDBException(error);
+    }
+  }
+
+  async removeSkillFromCandidate(skillId: string, user: User) {
+    try {
+      const candidate = await this.findOneByUserId(user.id);
+      if (!candidate) throw new NotFoundException('Candidate Not Found');
+
+      const skill = await this.skillsService.findById(skillId);
+      if (!skill) throw new NotFoundException('Skill Not Found');
+
+      // Filter out the skill to be removed
+      if (candidate.skills) {
+        candidate.skills = candidate.skills.filter(s => s.id !== skillId);
+        await this.save(candidate);
+      }
+      
+      return {
+        message: 'Skill removed successfully'
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      this.errrorHandlerService.handleDBException(error);
+    }
+  }
+
+  // Skills
+
   // async updateProfileImageUrl(url: string, id: string){
   //   await this.usersRepository.update(id, {profileImageUrl: url});
   //   return {

@@ -9,6 +9,7 @@ import { CvEntity } from '../entities/cv.entity';
 import { User } from 'src/users/entities/user.entity';
 import { CandidateService } from './candidate.service';
 import { OpenAI } from 'openai';
+import { SkillsService } from 'src/skills/skills.service';
 
 @Injectable()
 export class CvService {
@@ -22,6 +23,7 @@ export class CvService {
     @InjectRepository(CvEntity)
     private cvRepository: Repository<CvEntity>,
     private readonly candidateService: CandidateService,
+    private readonly skillsService: SkillsService,
   ) {}
   /**
    * Procesa un CV y extrae información estructurada usando IA
@@ -86,6 +88,15 @@ export class CvService {
           throw new BadRequestException(`Campo requerido faltante: ${field}`);
         }
       });
+
+      // Procesar y guardar skills
+      if (respuesta.habilidades && Array.isArray(respuesta.habilidades)) {
+        const skills = await this.skillsService.findOrCreate(
+          respuesta.habilidades,
+        );
+        candidate.skills = skills;
+        await this.candidateService.save(candidate);
+      }
 
       // Si ya existe un CV, actualizarlo
       if (cv) {

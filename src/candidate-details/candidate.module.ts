@@ -10,6 +10,7 @@ import { CvEntity } from './entities/cv.entity';
 import { CvService } from './services/cv.service';
 import { CvController } from './cv.controller';
 import { AuthModule } from 'src/auth/auth.module';
+import { SkillsModule } from 'src/skills/skills.module';
 
 @Module({
   controllers: [CandidateController, CvController],
@@ -20,6 +21,7 @@ import { AuthModule } from 'src/auth/auth.module';
     CommonModule,
     MailModule,
     AuthModule,
+    SkillsModule,
   ],
   exports: [CandidateService, TypeOrmModule, CvService],
 })

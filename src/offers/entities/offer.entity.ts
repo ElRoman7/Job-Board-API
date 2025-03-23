@@ -1,9 +1,10 @@
 import { Company } from 'src/company-details/entities/company.entity';
 import { Recruiter } from 'src/recruiter-details/entities/recruiter.entity';
-import { Column, Entity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, ManyToMany, DeleteDateColumn, OneToMany } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, ManyToMany, DeleteDateColumn, OneToMany, JoinTable } from 'typeorm';
 import { AdditionalBenefit, ContractType, ExperienceLevel, ModalityType, WorkArea } from './tags.entity';
 import { SalaryType } from '../interfaces/valid-salary-type';
 import { Application } from 'src/job-applications/entities/application.entity';
+import { Skill } from 'src/skills/entities/skill.entity';
 
 @Entity('offers')
 export class Offer {
@@ -73,6 +74,16 @@ export class Offer {
 
   @OneToMany(() => Application, (application) => application.offer)
   applications: Application[];
+
+  @ManyToMany(() => Skill, (skill) => skill.offers, {
+    eager: true,
+  })
+  @JoinTable({
+    name: 'offer_skills',
+    joinColumn: { name: 'offer_id' },
+    inverseJoinColumn: { name: 'skill_id' },
+  })
+  requiredSkills: Skill[];
 
   softDelete(): void {
     this.deletedAt = new Date();
