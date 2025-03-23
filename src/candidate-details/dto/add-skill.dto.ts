@@ -1,6 +1,6 @@
-import { IsString } from "class-validator";
+import { IsArray } from 'class-validator';
 
-export class AddSkillDto{
-    @IsString()
-    skill: string[];
+export class AddSkillDto {
+  @IsArray()
+  skill: string[];
 }

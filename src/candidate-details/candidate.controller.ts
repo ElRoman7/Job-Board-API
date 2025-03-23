@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   ParseUUIDPipe,
+  Patch,
 } from '@nestjs/common';
 import { CreateCandidateDto } from './dto/create-candidate.dto';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
@@ -31,15 +32,24 @@ export class CandidateController {
     return this.candidateService.findAll();
   }
 
-  @Get('/user/:id')
-  findCandidateById(@Param('id', ParseUUIDPipe) id: string) {
-    return this.candidateService.findOneByUserId(id);
-  }
-
   @Auth(ValidRoles.candidate)
   @Post('/skill')
   addSkillToCandidate(@Body() addSkillDto: AddSkillDto, @GetUser() user: User) {
     return this.candidateService.addSkillToCandidate(addSkillDto, user);
+  }
+
+  @Auth(ValidRoles.candidate)
+  @Patch('/skill/:id')
+  removeSkillToCandidate(
+    @Param('id', ParseUUIDPipe) id: string,
+    @GetUser() user: User,
+  ) {
+    return this.candidateService.removeSkillFromCandidate(id, user);
+  }
+
+  @Get('/user/:id')
+  findCandidateById(@Param('id', ParseUUIDPipe) id: string) {
+    return this.candidateService.findOneByUserId(id);
   }
 
   // @Get('/:id')

@@ -80,6 +80,7 @@ export class CandidateService {
       relations: {
         user: true,
         cv: true,
+        skills: true,
         applications: {
           offer: {
             company: {
@@ -147,12 +148,30 @@ export class CandidateService {
       const candidate = await this.findOneByUserId(user.id);
       if (!candidate) throw new NotFoundException('Candidate Not Found');
 
-      const skills = await this.skillsService.findOrCreate(addSkillDto.skill);
-      candidate.skills = skills;
+      // Obtener o crear las nuevas skills
+      const newSkills = await this.skillsService.findOrCreate(
+        addSkillDto.skill,
+      );
+
+      // Inicializar el array de skills si no existe
+      if (!candidate.skills) {
+        candidate.skills = [];
+      }
+
+      // Filtrar las skills que ya existen para no duplicarlas
+      const skillsToAdd = newSkills.filter(
+        (newSkill) =>
+          !candidate.skills.some(
+            (existingSkill) => existingSkill.id === newSkill.id,
+          ),
+      );
+
+      // Añadir solo las skills que no existían previamente
+      candidate.skills = [...candidate.skills, ...skillsToAdd];
       await this.save(candidate);
-      
+
       return {
-        message: 'Skills added successfully'
+        message: 'Skills added successfully',
       };
     } catch (error) {
       if (error instanceof NotFoundException) {
