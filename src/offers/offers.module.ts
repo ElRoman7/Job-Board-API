@@ -9,11 +9,26 @@ import { CompaniesModule } from 'src/company-details/companies.module';
 import { CommonModule } from 'src/common/common.module';
 import { SeedService } from './seed.service';
 import { AdditionalBenefit, ContractType, ExperienceLevel, ModalityType, WorkArea } from './entities/tags.entity';
+import { SkillsModule } from 'src/skills/skills.module';
 
 @Module({
   controllers: [OffersController],
   providers: [OffersService, SeedService],
-  imports: [TypeOrmModule.forFeature([Offer, ModalityType, ContractType, ExperienceLevel, WorkArea, AdditionalBenefit]), AuthModule, RecruitersModule, CompaniesModule, CommonModule],
-  exports: [TypeOrmModule, OffersService, SeedService]
+  imports: [
+    TypeOrmModule.forFeature([
+      Offer,
+      ModalityType,
+      ContractType,
+      ExperienceLevel,
+      WorkArea,
+      AdditionalBenefit,
+    ]),
+    AuthModule,
+    RecruitersModule,
+    CompaniesModule,
+    CommonModule,
+    SkillsModule,
+  ],
+  exports: [TypeOrmModule, OffersService, SeedService],
 })
 export class OffersModule {}

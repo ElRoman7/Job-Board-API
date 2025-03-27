@@ -4,54 +4,56 @@ import { ModalityType, ContractType, ExperienceLevel, WorkArea, AdditionalBenefi
 import { SalaryType } from "../interfaces/valid-salary-type";
 
 export class CreateOfferDto {
-    @IsString()
-    @MinLength(10)
-    title: string;
+  @IsString()
+  @MinLength(10)
+  title: string;
 
-    @IsString()
-    @MinLength(20)
-    description: string;
+  @IsString()
+  @MinLength(20)
+  description: string;
 
-    @IsString()
-    @IsEnum(OfferStatus)
-    status: OfferStatus;
+  @IsString()
+  @IsEnum(OfferStatus)
+  status: OfferStatus;
 
-    @IsUUID()
-    companyId: string;
+  @IsUUID()
+  companyId: string;
 
-    @IsArray()
-    @IsNotEmpty()
-    modalityTypes: ModalityType[];
+  @IsArray()
+  @IsNotEmpty()
+  modalityTypes: ModalityType[];
 
-    @IsArray()
-    @IsNotEmpty()
-    contractTypes: ContractType[];
+  @IsArray()
+  @IsNotEmpty()
+  contractTypes: ContractType[];
 
-    @IsArray()
-    @IsNotEmpty()
-    experienceLevels: ExperienceLevel[];
+  @IsArray()
+  @IsNotEmpty()
+  experienceLevels: ExperienceLevel[];
 
-    @IsArray()
-    @IsNotEmpty()
-    workAreas: WorkArea[];
+  @IsArray()
+  @IsNotEmpty()
+  workAreas: WorkArea[];
 
-    @IsArray()
-    @IsNotEmpty()
-    additionalBenefits: AdditionalBenefit[];
+  @IsArray()
+  @IsNotEmpty()
+  additionalBenefits: AdditionalBenefit[];
 
-    @IsOptional()
-    @IsDecimal()
-    salaryMin: number;
+  @IsOptional()
+  @IsDecimal()
+  salaryMin: number;
 
-    @IsOptional()
-    @IsDecimal()
-    salaryMax: number;
+  @IsOptional()
+  @IsDecimal()
+  salaryMax: number;
 
-    @IsString()
-    currency: string;
+  @IsString()
+  currency: string;
 
-    @IsString()
-    @IsEnum(SalaryType)
-    salaryType: SalaryType;
+  @IsArray()
+  skill: string[];
 
+  @IsString()
+  @IsEnum(SalaryType)
+  salaryType: SalaryType;
 }

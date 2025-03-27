@@ -16,6 +16,7 @@ import {
   WorkArea,
   AdditionalBenefit,
 } from './entities/tags.entity';
+import { SkillsService } from 'src/skills/skills.service';
 
 @Injectable()
 export class OffersService {
@@ -35,38 +36,45 @@ export class OffersService {
     private readonly workAreaRepository: Repository<WorkArea>,
     @InjectRepository(AdditionalBenefit)
     private readonly additionalBenefitRepository: Repository<AdditionalBenefit>,
+    private readonly skillsService: SkillsService,
   ) {}
 
   async create(createOfferDto: CreateOfferDto, user: User) {
     const { companyId, ...rest } = createOfferDto;
 
-    // Obtener entidades relacionadas
+    // Obtain related entities
     const relatedEntities = await this.getRelatedEntities(createOfferDto);
 
-    // Si el usuario es reclutador, validar permisos
+    // Get or create required skills
+    const requiredSkills = await this.skillsService.findOrCreate(
+      createOfferDto.skill,
+    );
+
+    let company,
+      recruiter = null;
+
+    // Handle user role-specific logic
     if (user.roles.includes('recruiter')) {
-      const recruiter = await this.recruitersService.findOneByUserId(user.id);
+      recruiter = await this.recruitersService.findOneByUserId(user.id);
       if (!recruiter) throw new UnauthorizedException(`Recruiter not found`);
 
-      const company = await this.companiesService.findOne(companyId);
+      company = await this.companiesService.findOne(companyId);
       await this.validateRecruiterPermissions(recruiter.id, companyId);
-
-      return this.saveOffer({
-        company,
-        recruiter,
-        ...relatedEntities,
-        ...rest,
-      });
+    } else {
+      // If user is a company
+      company = await this.validateCompanyForUser(user.id, companyId);
     }
 
-    // Si el usuario no es reclutador, validar su compañía
-    const company = await this.validateCompanyForUser(user.id, companyId);
-    return this.saveOffer({
+    // Create and save the offer with all related entities including skills
+    const offer = this.offerRepository.create({
       company,
-      recruiter: null,
+      recruiter,
+      requiredSkills,
       ...relatedEntities,
       ...rest,
     });
+
+    return this.offerRepository.save(offer);
   }
 
   // Obtener entidades relacionadas
@@ -375,6 +383,24 @@ export class OffersService {
 
     if (!offer) {
       throw new BadRequestException(`Offer with id ${id} not found`);
+    }
+    if (updateOfferDto.skill) {
+      //Limpiar Array de Required Skills para volver a asignarlas
+      offer.requiredSkills = [];
+      // Obtener o crear las nuevas skills
+      const newSkills = await this.skillsService.findOrCreate(
+        updateOfferDto.skill,
+      );
+      // Inicializar el array de skills si no existe
+      // Filtrar las skills que ya existen para no duplicarlas
+      const skillsToAdd = newSkills.filter(
+        (newSkill) =>
+          !offer.requiredSkills.some(
+            (existingSkill) => existingSkill.id === newSkill.id,
+          ),
+      );
+      // Añadir solo las skills que no existían previamente
+      offer.requiredSkills = [...offer.requiredSkills, ...skillsToAdd];
     }
 
     // Check if the user is a recruiter

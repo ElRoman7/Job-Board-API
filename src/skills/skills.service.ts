@@ -12,11 +12,11 @@ export class SkillsService {
 
   async findOrCreate(skillNames: string[]): Promise<Skill[]> {
     const skills: Skill[] = [];
-    
+
     for (const name of skillNames) {
       const normalizedName = name.toLowerCase().trim();
       let skill = await this.skillsRepository.findOne({
-        where: { name: normalizedName }
+        where: { name: normalizedName },
       });
 
       if (!skill) {
@@ -31,8 +31,10 @@ export class SkillsService {
   }
 
   async findById(id: string) {
-    return this.skillsRepository.findOneBy({id})
+    return this.skillsRepository.findOneBy({ id });
   }
 
-
+  async getSkills() {
+    return this.skillsRepository.find();
+  }
 }
