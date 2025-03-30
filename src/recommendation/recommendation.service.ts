@@ -47,9 +47,9 @@ export class RecommendationService implements OnModuleInit {
     topN = 10,
   ): Promise<RecommendationDTO[]> {
     try {
-      // Garantizar que topN sea al menos 5
-      topN = Math.max(5, topN);
-      
+      // Garantizar que topN sea al menos 3
+      topN = Math.max(3, topN);
+
       if (!this.isModelInitialized) {
         await this.initializeModel();
       }
@@ -70,8 +70,11 @@ export class RecommendationService implements OnModuleInit {
         return [];
       }
 
-      const candidateSkillsEmbedding = await this.recommenderModel.generateRecommendationEmbedding(candidate);
-      const appliedOfferIds = new Set(applicationHistory.map(app => app.offer.id));
+      const candidateSkillsEmbedding =
+        await this.recommenderModel.generateRecommendationEmbedding(candidate);
+      const appliedOfferIds = new Set(
+        applicationHistory.map((app) => app.offer.id),
+      );
 
       const recommendations = [];
       for (const offer of allOffers) {
@@ -83,42 +86,55 @@ export class RecommendationService implements OnModuleInit {
           offer,
           candidateSkillsEmbedding,
         );
-        
+
         // Asegurar que mlScore sea un número válido
         if (mlScore === null || mlScore === undefined || isNaN(mlScore)) {
-          this.logger.warn(`mlScore inválido para oferta ${offer.id}, usando valor predeterminado 0.5`);
+          this.logger.warn(
+            `mlScore inválido para oferta ${offer.id}, usando valor predeterminado 0.5`,
+          );
           mlScore = 0.5; // Valor neutro predeterminado
         }
-        
+
         // Calcular score basado en heurísticas directamente observable
         const heuristicScore = this.calculateHeuristicScore(offer, candidate);
-        
+
         // Combinar ambos scores con comprobación de validez
         const combinedScore = mlScore * 0.5 + heuristicScore * 0.5;
-        
-        recommendations.push(this.createRecommendationDTO(
-          offer, 
-          candidate, 
-          combinedScore, 
-          { mlScore, heuristicScore }
-        ));
+
+        recommendations.push(
+          this.createRecommendationDTO(offer, candidate, combinedScore, {
+            mlScore,
+            heuristicScore,
+          }),
+        );
       }
 
-      this.logger.log(`Generando ${recommendations.length} recomendaciones para userId ${userId}`);
-      
+      this.logger.log(
+        `Generando ${recommendations.length} recomendaciones para userId ${userId}`,
+      );
+
       // Ordenar por score combinado
-      const sortedRecommendations = recommendations.sort((a, b) => b.matchScore - a.matchScore);
-      
+      const sortedRecommendations = recommendations.sort(
+        (a, b) => b.matchScore - a.matchScore,
+      );
+
       // Log de las 3 principales recomendaciones para debug
       if (sortedRecommendations.length > 0) {
-        const top3 = sortedRecommendations.slice(0, Math.min(3, sortedRecommendations.length));
-        this.logger.log(`Top 3 recomendaciones: ${JSON.stringify(top3.map(r => ({
-          title: r.title,
-          score: r.matchScore,
-          skills_match: r.skillsMatchPercentage
-        })))}`);
+        const top3 = sortedRecommendations.slice(
+          0,
+          Math.min(3, sortedRecommendations.length),
+        );
+        this.logger.log(
+          `Top 3 recomendaciones: ${JSON.stringify(
+            top3.map((r) => ({
+              title: r.title,
+              score: r.matchScore,
+              skills_match: r.skillsMatchPercentage,
+            })),
+          )}`,
+        );
       }
-      
+
       return sortedRecommendations.slice(0, topN);
     } catch (error) {
       this.logger.error(`Error generando recomendaciones: ${error.message}`);
