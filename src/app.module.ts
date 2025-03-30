@@ -12,6 +12,7 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { CandidateModule } from './candidate-details/candidate.module';
 import { NotificationsWsModule } from './notifications-ws/notifications-ws.module';
 import { SkillsModule } from './skills/skills.module';
+import { RecommendationModule } from './recommendation/recommendation.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { SkillsModule } from './skills/skills.module';
     CandidateModule,
     NotificationsWsModule,
     SkillsModule,
+    RecommendationModule,
   ],
 })
 export class AppModule {}

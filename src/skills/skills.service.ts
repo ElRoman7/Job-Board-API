@@ -34,6 +34,10 @@ export class SkillsService {
     return this.skillsRepository.findOneBy({ id });
   }
 
+  async findAll() {
+    return await this.skillsRepository.find();
+  }
+
   async getSkills() {
     return this.skillsRepository.find();
   }

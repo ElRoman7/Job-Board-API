@@ -37,6 +37,9 @@ export class Candidate {
   country: string; // País
 
   @Column('text', { nullable: true })
+  expectedSalary: number;
+
+  @Column('text', { nullable: true })
   website: string;
 
   //* Definir explícitamente la columna user_id para que sea parte de la entidad

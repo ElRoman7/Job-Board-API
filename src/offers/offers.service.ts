@@ -17,6 +17,7 @@ import {
   AdditionalBenefit,
 } from './entities/tags.entity';
 import { SkillsService } from 'src/skills/skills.service';
+import { OfferStatus } from './interfaces/valid-status';
 
 @Injectable()
 export class OffersService {
@@ -486,6 +487,33 @@ export class OffersService {
     offer.deletedAt = new Date();
 
     return this.offerRepository.save(offer);
+  }
+
+  async findAllActiveWithRelations() {
+    return this.offerRepository.find({
+      where: {
+        status: OfferStatus.published,
+      },
+      relations: {
+        company: {
+          user: true, // Relación con usuario de la compañía
+          industries: true, // Relación con industrias
+        },
+        recruiter: {
+          user: true, // Relación con usuario del reclutador
+        },
+        modalityTypes: true, // Relación con modalidad de trabajo
+        contractTypes: true, // Relación con tipos de contrato
+        experienceLevels: true, // Relación con niveles de experiencia
+        workAreas: true, // Relación con áreas de trabajo
+        additionalBenefits: true, // Relación con beneficios adicionales
+        applications: {
+          candidate: {
+            user: true,
+          },
+        },
+      },
+    });
   }
 
   // Obtener Tags

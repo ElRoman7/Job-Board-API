@@ -169,4 +169,25 @@ export class ApplicationsService {
 
     return application; // Return the updated application
   }
+
+  async findWithRelations(): Promise<Application[]> {
+    return this.applicationRepository.find({
+      relations: [
+        'candidate',
+        'candidate.skills',
+        'offer',
+        'offer.requiredSkills',
+        'offer.company',
+        'offer.modalityTypes',
+        'offer.contractTypes',
+      ],
+    });
+  }
+
+  async getApplicationHistory(candidateId: string): Promise<Application[]> {
+    return this.applicationRepository.find({
+      where: { candidate: { id: candidateId } },
+      relations: ['offer', 'offer.requiredSkills'],
+    });
+  }
 }
