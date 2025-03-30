@@ -14,36 +14,41 @@ import { UpdateUserDto } from './dto/update-user.dto';
 @Injectable()
 export class UsersService {
   constructor(
-    private readonly errorHandlerService : ErrorHandlerService,
-    @InjectRepository(User) private readonly usersRepository : Repository<User>,
+    private readonly errorHandlerService: ErrorHandlerService,
+    @InjectRepository(User) private readonly usersRepository: Repository<User>,
     private readonly dataSource: DataSource,
     private readonly mailService: MailService,
     private encoderService: EncoderService,
   ) {}
-  
+
   async create(createUserDto: CreateUserDto): Promise<User> {
     try {
-      return await executeWithTransaction(this.dataSource, async (queryRunner) => {
-        const user = await this.prepareUserForTransaction(createUserDto);
-        user.roles = [ValidRoles.candidate]
-        await queryRunner.manager.save(user);
-        // Maneja el envío del correo de confirmación
-        try {
-          await this.mailService.sendUserConfirmation(user);  // Usa await para esperar a que el correo se envíe
-        } catch (e) {
-          throw new Error(`User creation failed: Unable to send confirmation email ${e}`);
-        }
-        return user;
-      });
+      return await executeWithTransaction(
+        this.dataSource,
+        async (queryRunner) => {
+          const user = await this.prepareUserForTransaction(createUserDto);
+          user.roles = [ValidRoles.candidate];
+          await queryRunner.manager.save(user);
+          // Maneja el envío del correo de confirmación
+          try {
+            await this.mailService.sendUserConfirmation(user); // Usa await para esperar a que el correo se envíe
+          } catch (e) {
+            throw new Error(
+              `User creation failed: Unable to send confirmation email ${e}`,
+            );
+          }
+          return user;
+        },
+      );
     } catch (error) {
       this.errorHandlerService.handleDBException(error);
     }
   }
-  
+
   async prepareUserForTransaction(createUserDto: CreateUserDto): Promise<User> {
     const findUser = await this.finOneByEmail(createUserDto.email);
-    if(findUser){
-      throw new BadRequestException('Email already in use')
+    if (findUser) {
+      throw new BadRequestException('Email already in use');
     }
     const { password, ...rest } = createUserDto;
     const user = this.usersRepository.create({
@@ -51,31 +56,31 @@ export class UsersService {
       password: bcrypt.hashSync(password, 10),
     });
     user.activationToken = await this.encoderService.generateToken();
-    
+
     return user;
   }
 
   async finOneByEmail(email: string): Promise<User> {
     const user: User = await this.usersRepository.findOne({
       where: { email },
-      select: ['id','email','password']
-    })
+      select: ['id', 'email', 'password'],
+    });
     return user;
   }
 
   async findOneById(id: string): Promise<User> {
     const user: User = await this.usersRepository.findOne({
-      where: { id }
-    })
+      where: { id },
+    });
     return user;
   }
 
-  async activateUser(activateUserDto: ActivateUserDto){
+  async activateUser(activateUserDto: ActivateUserDto) {
     const { activationToken } = activateUserDto;
-    const user = await this.usersRepository.findOneBy({activationToken})
+    const user = await this.usersRepository.findOneBy({ activationToken });
 
-    if(!user){
-      throw new BadRequestException('Invalid or expired token')
+    if (!user) {
+      throw new BadRequestException('Invalid or expired token');
     }
 
     user.is_active = true;
@@ -83,33 +88,32 @@ export class UsersService {
     await this.usersRepository.save(user);
 
     return {
-      message: 'Account actived successfully'
-    }
+      message: 'Account actived successfully',
+    };
   }
 
-  async getUserDetails(user : User){
-    if(user.roles.includes(ValidRoles.company)){
-      
-    }
-
+  async getUserById(id: string) {
+    const user = await this.usersRepository.findOneBy({ id });
+    console.log(user);
+    return user;
   }
 
-  async updateUser(updateUserDto: UpdateUserDto, id: string){
-    const user = await this.usersRepository.findOneBy({id});
-    if(!user){
-      throw new BadRequestException('User not found')
+  async updateUser(updateUserDto: UpdateUserDto, id: string) {
+    const user = await this.usersRepository.findOneBy({ id });
+    if (!user) {
+      throw new BadRequestException('User not found');
     }
     await this.usersRepository.update(id, updateUserDto);
     return {
-      message: 'User updated successfully'
-    }
+      message: 'User updated successfully',
+    };
   }
 
-  async updateProfileImageUrl(url: string, id: string){
-    await this.updateUser({profileImageUrl: url}, id);
+  async updateProfileImageUrl(url: string, id: string) {
+    await this.updateUser({ profileImageUrl: url }, id);
     return {
-      message: 'Profile image updated successfully'
-    }
+      message: 'Profile image updated successfully',
+    };
   }
 
   // findAll() {
