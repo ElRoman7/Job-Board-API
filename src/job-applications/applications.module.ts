@@ -6,7 +6,6 @@ import { Application } from './entities/application.entity';
 import { AuthModule } from 'src/auth/auth.module';
 import { CommonModule } from 'src/common/common.module';
 import { CandidateModule } from 'src/candidate-details/candidate.module';
-import { OffersModule } from 'src/offers/offers.module';
 import { NotificationsWsModule } from 'src/notifications-ws/notifications-ws.module';
 
 @Module({
@@ -16,7 +15,6 @@ import { NotificationsWsModule } from 'src/notifications-ws/notifications-ws.mod
     AuthModule,
     CommonModule,
     CandidateModule,
-    OffersModule,
     NotificationsWsModule,
   ],
   providers: [ApplicationsService],

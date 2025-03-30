@@ -5,10 +5,10 @@ import { Application } from './entities/application.entity';
 import { Repository } from 'typeorm';
 import { ErrorHandlerService } from 'src/common/error-handler.service';
 import { User } from 'src/users/entities/user.entity';
-import { OffersService } from 'src/offers/offers.service';
 import { CandidateService } from 'src/candidate-details/services/candidate.service';
 import { NotificationsService } from 'src/notifications-ws/notifications.service';
 import { ValidJobApplicationStatus } from './interfaces/ValidStatus';
+import { Offer } from 'src/offers/entities/offer.entity';
 
 @Injectable()
 export class ApplicationsService {
@@ -17,17 +17,16 @@ export class ApplicationsService {
     private readonly applicationRepository: Repository<Application>,
     private readonly errorHandlerService: ErrorHandlerService,
     private readonly candidateService: CandidateService,
-    private readonly offersService: OffersService,
     private readonly notificationsService: NotificationsService,
   ) {}
 
-  async apply(applicationDto: ApplicationDto, user: User) {
+  async apply(applicationDto: ApplicationDto, user: User, offer: Offer) {
     const { offerId, coverLetter } = applicationDto;
     const candidate = await this.candidateService.findOneByUserId(user.id);
     if (!candidate) {
       throw new NotFoundException('Candidate not Found');
     }
-    const offer = await this.offersService.findOne(offerId);
+
     if (!offer) {
       throw new NotFoundException('Offer not Found');
     }

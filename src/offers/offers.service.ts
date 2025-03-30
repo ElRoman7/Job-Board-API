@@ -1,4 +1,10 @@
-import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { CreateOfferDto } from './dto/create-offer.dto';
 import { UpdateOfferDto } from './dto/update-offer.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -18,6 +24,10 @@ import {
 } from './entities/tags.entity';
 import { SkillsService } from 'src/skills/skills.service';
 import { OfferStatus } from './interfaces/valid-status';
+import { ApplicationsService } from 'src/job-applications/applications.service';
+import { ApplicationDto } from 'src/job-applications/dto/create-application.dto';
+import { RecommendationService } from 'src/recommendation/recommendation.service';
+import { InternalServerError } from 'openai';
 
 @Injectable()
 export class OffersService {
@@ -38,6 +48,8 @@ export class OffersService {
     @InjectRepository(AdditionalBenefit)
     private readonly additionalBenefitRepository: Repository<AdditionalBenefit>,
     private readonly skillsService: SkillsService,
+    private readonly applicationsService: ApplicationsService,
+    private readonly recommendationService: RecommendationService,
   ) {}
 
   async create(createOfferDto: CreateOfferDto, user: User) {
@@ -514,6 +526,32 @@ export class OffersService {
         },
       },
     });
+  }
+
+  async apply(applicationDTO: ApplicationDto, user: User) {
+    const offer = await this.findOne(applicationDTO.offerId);
+    if (!offer) {
+      throw new NotFoundException(
+        `Offer with id ${applicationDTO.offerId} not found`,
+      );
+    }
+    return this.applicationsService.apply(applicationDTO, user, offer);
+  }
+
+  async getPersonalizedRecommendations(userId: string, limit) {
+    const offers = await this.findAllActiveWithRelations();
+    if (!offers || offers.length === 0) {
+      throw new InternalServerErrorException('No Offers Found');
+    }
+    
+    const recommendations = await this.recommendationService.getPersonalizedRecommendations(userId, limit, offers);
+    
+    // Filter offers based on recommendation IDs
+    const recommendedOffers = recommendations.map(recommendation => {
+      return offers.find(offer => offer.id === recommendation.offerId);
+    }).filter(Boolean); // Remove any undefined values
+    
+    return recommendedOffers;
   }
 
   // Obtener Tags

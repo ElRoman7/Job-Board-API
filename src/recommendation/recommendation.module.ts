@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { RecommendationService } from './recommendation.service';
 import { JobRecommenderModel } from './job-recommender.model';
-import { OffersModule } from '../offers/offers.module';
 import { SkillsModule } from '../skills/skills.module';
 import { CandidateModule } from 'src/candidate-details/candidate.module';
 import { ApplicationsModule } from 'src/job-applications/applications.module';
@@ -10,7 +9,6 @@ import { AuthModule } from 'src/auth/auth.module';
 
 @Module({
   imports: [
-    OffersModule,
     SkillsModule,
     AuthModule,
     CandidateModule,

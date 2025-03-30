@@ -10,6 +10,8 @@ import { CommonModule } from 'src/common/common.module';
 import { SeedService } from './seed.service';
 import { AdditionalBenefit, ContractType, ExperienceLevel, ModalityType, WorkArea } from './entities/tags.entity';
 import { SkillsModule } from 'src/skills/skills.module';
+import { RecommendationModule } from 'src/recommendation/recommendation.module';
+import { ApplicationsModule } from 'src/job-applications/applications.module';
 
 @Module({
   controllers: [OffersController],
@@ -28,6 +30,8 @@ import { SkillsModule } from 'src/skills/skills.module';
     CompaniesModule,
     CommonModule,
     SkillsModule,
+    ApplicationsModule,
+    RecommendationModule,
   ],
   exports: [TypeOrmModule, OffersService, SeedService],
 })

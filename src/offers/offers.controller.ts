@@ -1,4 +1,17 @@
-import { Controller, Get, Post, Body, Patch, Param, ParseUUIDPipe, Query, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  ParseUUIDPipe,
+  Query,
+  Delete,
+  Request,
+  DefaultValuePipe,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { OffersService } from './offers.service';
 import { CreateOfferDto } from './dto/create-offer.dto';
 import { UpdateOfferDto } from './dto/update-offer.dto';
@@ -6,6 +19,7 @@ import { Auth, GetUser } from '../auth/decorators';
 import { ValidRoles } from '../users/interfaces/valid-roles';
 import { User } from 'src/users/entities/user.entity';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { ApplicationDto } from 'src/job-applications/dto/create-application.dto';
 
 @Controller('offers')
 export class OffersController {
@@ -47,6 +61,20 @@ export class OffersController {
     return this.offersService.findAllAdditionalBenefit();
   }
 
+  @Get('recommendations')
+  @Auth(ValidRoles.candidate)
+  async getRecommendations(
+    @Request() req,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+  ) {
+    const userId = req.user.id;
+    return this.offersService.getPersonalizedRecommendations(
+      userId,
+      limit,
+    );
+  }
+
   //Get Offers By company or recruiters
   @Auth(ValidRoles.company, ValidRoles.recruiter)
   @Get('/company')
@@ -72,6 +100,12 @@ export class OffersController {
   @Get('/company/:id')
   findAllByCompany(@Param('id', ParseUUIDPipe) companyId: string) {
     return companyId;
+  }
+
+  @Auth(ValidRoles.candidate)
+  @Post('apply')
+  apply(@Body() applicationDto: ApplicationDto, @GetUser() user: User) {
+    return this.offersService.apply(applicationDto, user);
   }
 
   @Auth(ValidRoles.recruiter, ValidRoles.company)
