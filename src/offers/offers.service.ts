@@ -1,7 +1,6 @@
 import {
   BadRequestException,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -27,7 +26,6 @@ import { OfferStatus } from './interfaces/valid-status';
 import { ApplicationsService } from 'src/job-applications/applications.service';
 import { ApplicationDto } from 'src/job-applications/dto/create-application.dto';
 import { RecommendationService } from 'src/recommendation/recommendation.service';
-import { InternalServerError } from 'openai';
 
 @Injectable()
 export class OffersService {
@@ -538,20 +536,78 @@ export class OffersService {
     return this.applicationsService.apply(applicationDTO, user, offer);
   }
 
-  async getPersonalizedRecommendations(userId: string, limit) {
-    const offers = await this.findAllActiveWithRelations();
-    if (!offers || offers.length === 0) {
-      throw new InternalServerErrorException('No Offers Found');
+  async getPersonalizedRecommendations(userId: string, limit: number = 10) {
+    try {
+      console.log(
+        `getPersonalizedRecommendations called for userId: ${userId}, limit: ${limit}`,
+      );
+
+      // Get all active offers
+      const offers = await this.findAllActiveWithRelations();
+
+      if (!offers || offers.length === 0) {
+        console.log('No offers found, returning empty array');
+        return [];
+      }
+
+      console.log(
+        `Found ${offers.length} active offers to process for recommendations`,
+      );
+
+      // Get personalized recommendations
+      const recommendations =
+        await this.recommendationService.getPersonalizedRecommendations(
+          userId,
+          limit,
+          offers,
+        );
+
+      console.log(
+        `Recommendation service returned ${recommendations?.length || 0} recommendations`,
+      );
+
+      if (!recommendations || recommendations.length === 0) {
+        console.log(
+          'No recommendations returned, providing random fallback offers',
+        );
+        // Return random offers if no recommendations
+        return offers.sort(() => Math.random() - 0.5).slice(0, limit);
+      }
+
+      // Filter offers based on recommendation IDs
+      const recommendedOffers = recommendations
+        .map((recommendation) => {
+          return offers.find((offer) => offer.id === recommendation.offerId);
+        })
+        .filter(Boolean); // Remove any undefined values
+
+      console.log(
+        `Final recommended offers count: ${recommendedOffers.length}`,
+      );
+
+      if (recommendedOffers.length === 0) {
+        console.log(
+          'After mapping recommendations to offers got empty array, providing fallback',
+        );
+        return offers.sort(() => Math.random() - 0.5).slice(0, limit);
+      }
+
+      return recommendedOffers;
+    } catch (error) {
+      console.error('Error in getPersonalizedRecommendations:', error);
+
+      // Return random offers as fallback
+      try {
+        const fallbackOffers = await this.findAllActiveWithRelations();
+        console.log(
+          `Returning ${Math.min(limit, fallbackOffers.length)} random offers due to error`,
+        );
+        return fallbackOffers.sort(() => Math.random() - 0.5).slice(0, limit);
+      } catch (fallbackError) {
+        console.error('Failed to get fallback offers:', fallbackError);
+        return [];
+      }
     }
-    
-    const recommendations = await this.recommendationService.getPersonalizedRecommendations(userId, limit, offers);
-    
-    // Filter offers based on recommendation IDs
-    const recommendedOffers = recommendations.map(recommendation => {
-      return offers.find(offer => offer.id === recommendation.offerId);
-    }).filter(Boolean); // Remove any undefined values
-    
-    return recommendedOffers;
   }
 
   // Obtener Tags

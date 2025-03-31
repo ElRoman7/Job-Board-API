@@ -50,55 +50,115 @@ export class RecommendationService implements OnModuleInit {
       // Garantizar que topN sea al menos 3
       topN = Math.max(3, topN);
 
+      this.logger.log(
+        `Starting recommendation process for user ${userId}, requested ${topN} recommendations. Total offers: ${allOffers.length}`,
+      );
+
       if (!this.isModelInitialized) {
+        this.logger.log('Model not initialized, initializing now...');
         await this.initializeModel();
       }
 
       const candidate = await this.candidatesService.findOneByUserId(userId);
       if (!candidate) {
-        this.logger.warn(`No se encontró candidato con userId ${userId}`);
-        return [];
+        this.logger.warn(
+          `No se encontró candidato con userId ${userId}, returning random recommendations`,
+        );
+        const randomRecommendations = allOffers
+          .slice(0, topN)
+          .map((offer) =>
+            this.createRecommendationDTO(offer, { skills: [] }, 0.5),
+          );
+        this.logger.log(
+          `Returning ${randomRecommendations.length} random recommendations due to no candidate found`,
+        );
+        return randomRecommendations;
       }
 
-      const [applicationHistory] = await Promise.all([
-        this.applicationsService.getApplicationHistory(candidate.id),
-      ]);
+      this.logger.log(
+        `Found candidate for userId ${userId}, proceeding with recommendations`,
+      );
 
-      if (allOffers.length === 0) {
-        this.logger.warn('No hay ofertas disponibles para recomendar');
-        return [];
-      }
-
-      const candidateSkillsEmbedding =
-        await this.recommenderModel.generateRecommendationEmbedding(candidate);
+      // Get application history
+      const applicationHistory =
+        await this.applicationsService.getApplicationHistory(candidate.id);
       const appliedOfferIds = new Set(
         applicationHistory.map((app) => app.offer.id),
       );
 
-      const recommendations = [];
-      for (const offer of allOffers) {
-        // Filtrar ofertas ya aplicadas
-        if (appliedOfferIds.has(offer.id)) continue;
+      this.logger.log(
+        `User has applied to ${appliedOfferIds.size} offers out of ${allOffers.length} available offers`,
+      );
 
-        // Obtener score del modelo ML
-        let mlScore = await this.recommenderModel.calculateOfferMatch(
-          offer,
-          candidateSkillsEmbedding,
+      // Check how many offers would remain after filtering
+      const availableOffers = allOffers.filter(
+        (offer) => !appliedOfferIds.has(offer.id),
+      );
+      this.logger.log(
+        `After filtering applied offers: ${availableOffers.length} offers remain available`,
+      );
+
+      // If too few offers would remain, use all offers with a preference for non-applied offers
+      let offersToProcess;
+      if (availableOffers.length < Math.max(topN, 3)) {
+        this.logger.log(
+          `Too few offers after filtering (${availableOffers.length}), including previously applied offers`,
         );
+        offersToProcess = allOffers; // Use all offers, including applied ones
+      } else {
+        offersToProcess = availableOffers;
+      }
 
-        // Asegurar que mlScore sea un número válido
-        if (mlScore === null || mlScore === undefined || isNaN(mlScore)) {
-          this.logger.warn(
-            `mlScore inválido para oferta ${offer.id}, usando valor predeterminado 0.5`,
+      // Get candidate skills embedding
+      let candidateSkillsEmbedding;
+      try {
+        candidateSkillsEmbedding =
+          await this.recommenderModel.generateRecommendationEmbedding(
+            candidate,
           );
-          mlScore = 0.5; // Valor neutro predeterminado
+      } catch (error) {
+        this.logger.error(
+          `Error generating candidate embedding: ${error.message}, using fallback scoring`,
+        );
+        candidateSkillsEmbedding = null;
+      }
+
+      // Calculate scores for each offer
+      const recommendations = [];
+      this.logger.log(
+        `Processing ${offersToProcess.length} offers for scoring`,
+      );
+
+      for (const offer of offersToProcess) {
+        // Apply a slight penalty for already applied offers
+        const alreadyApplied = appliedOfferIds.has(offer.id);
+
+        // Calculate ML score (or use default)
+        let mlScore = 0.5; // Default score
+        if (candidateSkillsEmbedding) {
+          try {
+            mlScore = await this.recommenderModel.calculateOfferMatch(
+              offer,
+              candidateSkillsEmbedding,
+            );
+            if (mlScore === null || mlScore === undefined || isNaN(mlScore)) {
+              mlScore = 0.5;
+            }
+          } catch (error) {
+            this.logger.warn(
+              `Failed to calculate ML score for offer ${offer.id}: ${error.message}`,
+            );
+          }
         }
 
-        // Calcular score basado en heurísticas directamente observable
+        // Calculate heuristic score
         const heuristicScore = this.calculateHeuristicScore(offer, candidate);
 
-        // Combinar ambos scores con comprobación de validez
-        const combinedScore = mlScore * 0.5 + heuristicScore * 0.5;
+        // Combine scores - apply penalty for already applied offers
+        let combinedScore = mlScore * 0.5 + heuristicScore * 0.5;
+        if (alreadyApplied) {
+          combinedScore *= 0.7; // 30% penalty for already applied offers
+        }
 
         recommendations.push(
           this.createRecommendationDTO(offer, candidate, combinedScore, {
@@ -109,35 +169,43 @@ export class RecommendationService implements OnModuleInit {
       }
 
       this.logger.log(
-        `Generando ${recommendations.length} recomendaciones para userId ${userId}`,
+        `Generated ${recommendations.length} recommendations for userId ${userId} before sorting/limiting`,
       );
 
-      // Ordenar por score combinado
+      if (recommendations.length === 0) {
+        this.logger.warn(
+          'No recommendations generated! Using fallback to random offers',
+        );
+        // Emergency fallback - just return random offers
+        return allOffers
+          .sort(() => Math.random() - 0.5)
+          .slice(0, topN)
+          .map((offer) => this.createRecommendationDTO(offer, candidate, 0.5));
+      }
+
+      // Sort recommendations by score
       const sortedRecommendations = recommendations.sort(
         (a, b) => b.matchScore - a.matchScore,
       );
 
-      // Log de las 3 principales recomendaciones para debug
-      if (sortedRecommendations.length > 0) {
-        const top3 = sortedRecommendations.slice(
-          0,
-          Math.min(3, sortedRecommendations.length),
-        );
-        this.logger.log(
-          `Top 3 recomendaciones: ${JSON.stringify(
-            top3.map((r) => ({
-              title: r.title,
-              score: r.matchScore,
-              skills_match: r.skillsMatchPercentage,
-            })),
-          )}`,
-        );
-      }
-
-      return sortedRecommendations.slice(0, topN);
+      const result = sortedRecommendations.slice(0, topN);
+      this.logger.log(
+        `Returning ${result.length} final recommendations for user ${userId}`,
+      );
+      return result;
     } catch (error) {
-      this.logger.error(`Error generando recomendaciones: ${error.message}`);
-      return [];
+      this.logger.error(`Error in recommendation process: ${error.message}`);
+      this.logger.error(error.stack);
+      // Fallback to random recommendations
+      const randomRecommendations = allOffers
+        .slice(0, topN)
+        .map((offer) =>
+          this.createRecommendationDTO(offer, { skills: [] }, 0.5),
+        );
+      this.logger.log(
+        `Returning ${randomRecommendations.length} random recommendations due to error`,
+      );
+      return randomRecommendations;
     }
   }
 
