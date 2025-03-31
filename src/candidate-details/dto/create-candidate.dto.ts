@@ -26,9 +26,9 @@ export class CreateCandidateDto {
   country: string; // País
 
   @IsOptional()
-  @IsUrl()
   @IsString()
-  website: string; // Sitio web de la empresa
+  @IsUrl()
+  website?: string; // Sitio web de la empresa
 
   //TODO
   //"aptitudes": string[],

@@ -212,6 +212,7 @@ export class OffersService {
       .leftJoinAndSelect('offer.additionalBenefits', 'additionalBenefits')
       .leftJoinAndSelect('offer.applications', 'applications')
       .leftJoinAndSelect('applications.candidate', 'candidate')
+      .leftJoinAndSelect('offer.requiredSkills', 'requiredSkills')
       .where(whereCondition)
       .take(limit)
       .skip(offset);
@@ -260,6 +261,11 @@ export class OffersService {
     // Execute query
     const offers = await queryBuilder.getMany();
 
+    // Transform offers to have consistent format with recommendations
+    const formattedOffers = offers.map((offer) => ({
+      ...offer,
+    }));
+
     // Count total based on filters
     let total = 0;
     if (recruiterId) {
@@ -276,7 +282,7 @@ export class OffersService {
       total = Number(count);
     }
 
-    return { offers, total, recruiterId };
+    return { offers: formattedOffers, total, recruiterId };
   }
 
   async findAllByCompany(user: User, paginationDto: PaginationDto) {
@@ -305,7 +311,8 @@ export class OffersService {
       .leftJoinAndSelect('offer.workAreas', 'workAreas')
       .leftJoinAndSelect('offer.additionalBenefits', 'additionalBenefits')
       .leftJoinAndSelect('offer.applications', 'applications')
-      .leftJoinAndSelect('applications.candidate', 'candidate');
+      .leftJoinAndSelect('applications.candidate', 'candidate')
+      .leftJoinAndSelect('offer.requiredSkills', 'requiredSkills');
 
     // If user is a company, always filter by their company ID
     if (userCompanyId) {
