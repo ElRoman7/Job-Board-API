@@ -49,13 +49,13 @@ export class CandidateService {
           );
           await queryRunner.manager.save(candidate);
           // Maneja el envío del correo de confirmación
-          try {
-            await this.mailService.sendUserConfirmation(user); // Usa await para esperar a que el correo se envíe
-          } catch (e) {
-            throw new Error(
-              `User creation failed: Unable to send confirmation email ${e}`,
-            );
-          }
+          // try {
+          //   await this.mailService.sendUserConfirmation(user); // Usa await para esperar a que el correo se envíe
+          // } catch (e) {
+          //   throw new Error(
+          //     `User creation failed: Unable to send confirmation email ${e}`,
+          //   );
+          // }
 
           return candidate;
         } catch (error) {
