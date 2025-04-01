@@ -35,18 +35,23 @@ export class CompaniesService implements OnModuleInit {
   async create(createCompanyDto: CreateCompanyDto, createUserDto: CreateUserDto): Promise<Company> {
     return await executeWithTransaction(this.dataSource, async (queryRunner) => {
       try {
-        const user = await this.usersService.prepareUserForTransaction(createUserDto);
-        user.roles = [ValidRoles.company]
-        await queryRunner.manager.save(user)
+        const user =
+          await this.usersService.prepareUserForTransaction(createUserDto);
+        user.roles = [ValidRoles.company];
+        await queryRunner.manager.save(user);
 
-        const company = await this.prepareCompanyForTransaction(createCompanyDto, user, queryRunner);
-        await queryRunner.manager.save(company)
+        const company = await this.prepareCompanyForTransaction(
+          createCompanyDto,
+          user,
+          queryRunner,
+        );
+        await queryRunner.manager.save(company);
 
-        try {
-          await this.mailService.sendUserConfirmation(user);  // Usando await para esperar a que el correo se envíe
-        } catch (e) {
-          throw new Error(`User creation failed: Unable to send confirmation email ${e}`);
-        }
+        // try {
+        //   await this.mailService.sendUserConfirmation(user);  // Usando await para esperar a que el correo se envíe
+        // } catch (e) {
+        //   throw new Error(`User creation failed: Unable to send confirmation email ${e}`);
+        // }
 
         return company;
       } catch (error) {

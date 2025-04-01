@@ -45,13 +45,13 @@ export class RecruitersService {
             user,
           );
           await queryRunner.manager.save(recruiter);
-          try {
-            await this.mailService.sendUserConfirmation(user); // Usa await para esperar a que el correo se envíe
-          } catch (e) {
-            throw new Error(
-              `User creation failed: Unable to send confirmation email ${e}`,
-            );
-          }
+          // try {
+          //   await this.mailService.sendUserConfirmation(user); // Usa await para esperar a que el correo se envíe
+          // } catch (e) {
+          //   throw new Error(
+          //     `User creation failed: Unable to send confirmation email ${e}`,
+          //   );
+          // }
 
           return recruiter;
         } catch (error) {

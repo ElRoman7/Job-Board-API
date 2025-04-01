@@ -30,13 +30,13 @@ export class UsersService {
           user.roles = [ValidRoles.candidate];
           await queryRunner.manager.save(user);
           // Maneja el envío del correo de confirmación
-          try {
-            await this.mailService.sendUserConfirmation(user); // Usa await para esperar a que el correo se envíe
-          } catch (e) {
-            throw new Error(
-              `User creation failed: Unable to send confirmation email ${e}`,
-            );
-          }
+          // try {
+          //   await this.mailService.sendUserConfirmation(user); // Usa await para esperar a que el correo se envíe
+          // } catch (e) {
+          //   throw new Error(
+          //     `User creation failed: Unable to send confirmation email ${e}`,
+          //   );
+          // }
           return user;
         },
       );

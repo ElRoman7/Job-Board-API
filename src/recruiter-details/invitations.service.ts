@@ -112,19 +112,19 @@ export class InvitationsService {
       throw new InternalServerErrorException('Error saving invitation');
     }
 
-    const url = `${this.mailService.frontUrl}/recruiter/companies`;
-    try {
-      await this.mailService.sendRecruiterCompanyRequest(
-        recruiter,
-        company,
-        url,
-      );
-    } catch (error) {
-      console.log(error);
-      throw new InternalServerErrorException(
-        `Error sending email to ${emailRecruiter}`,
-      );
-    }
+    // const url = `${this.mailService.frontUrl}/recruiter/companies`;
+    // try {
+    //   await this.mailService.sendRecruiterCompanyRequest(
+    //     recruiter,
+    //     company,
+    //     url,
+    //   );
+    // } catch (error) {
+    //   console.log(error);
+    //   throw new InternalServerErrorException(
+    //     `Error sending email to ${emailRecruiter}`,
+    //   );
+    // }
     const message = `Has recibido una invitación de ${company.user.name} para ser parte de su red de reclutamiento`;
 
     await this.notificationsService.createNotification(
