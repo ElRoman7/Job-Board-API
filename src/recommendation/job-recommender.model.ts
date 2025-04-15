@@ -29,30 +29,44 @@ export class JobRecommenderModel implements OnModuleInit {
       const skills = await this.skillsService.findAll();
       this.dataPreprocessor = new DataPreprocessor(skills);
       this.NUM_SKILLS = skills.length;
-      
+
       this.model = tf.sequential();
 
       // Define input shape consistently - this is critical
-      const inputSize = this.NUM_SKILLS * 2 + 2 + 1 + 4; // Skills (candidato + oferta) + locations + salary + contract
+      // Candidate: skills + location + salary + contract
+      // Offer: skills + location + salary + contract
+      const inputSize = this.NUM_SKILLS + 2 + 4 + (this.NUM_SKILLS + 2 + 4);
       this.logger.log(`Initializing model with input shape [${inputSize}]`);
-      
+
       this.model.add(
         tf.layers.dense({
-          units: 128,
+          units: 32,
           activation: 'relu',
           inputShape: [inputSize],
+          kernelRegularizer: tf.regularizers.l2({ l2: 0.01 }),
         }),
       );
-      // Capas ocultas
-      this.model.add(tf.layers.dense({ units: 64, activation: 'relu' }));
-      this.model.add(tf.layers.dropout({ rate: 0.2 }));
-      this.model.add(tf.layers.dense({ units: 32, activation: 'relu' }));
+
+      this.model.add(tf.layers.dropout({ rate: 0.3 }));
+      this.model.add(
+        tf.layers.dense({
+          units: 16,
+          activation: 'relu',
+          kernelRegularizer: tf.regularizers.l2({ l2: 0.01 }),
+        }),
+      );
 
       // Capa de salida (clasificación binaria)
-      this.model.add(tf.layers.dense({ units: 1, activation: 'sigmoid' }));
+      this.model.add(
+        tf.layers.dense({
+          units: 1,
+          activation: 'sigmoid',
+          kernelRegularizer: tf.regularizers.l2({ l2: 0.01 }),
+        }),
+      );
 
       this.model.compile({
-        optimizer: tf.train.adam(0.001),
+        optimizer: tf.train.adam(0.0005), // Reduced learning rate
         loss: 'binaryCrossentropy',
         metrics: ['accuracy'],
       });
@@ -60,7 +74,9 @@ export class JobRecommenderModel implements OnModuleInit {
       try {
         await this.loadModelWeights();
       } catch (error) {
-        this.logger.warn('No se pudieron cargar pesos pre-entrenados, usando inicialización aleatoria');
+        this.logger.warn(
+          'No se pudieron cargar pesos pre-entrenados, usando inicialización aleatoria',
+        );
       }
 
       this.isModelReady = true;
@@ -86,14 +102,25 @@ export class JobRecommenderModel implements OnModuleInit {
       
       this.logger.log(`Entrenando con ${features.shape[0]} ejemplos, dimensiones: ${features.shape}`);
       
-      await this.model.fit(features, labels, {
+      const history = await this.model.fit(features, labels, {
         epochs,
-        batchSize: 64,
+        batchSize: 32, // Reduced batch size
         validationSplit: 0.2,
         callbacks: [
-          tf.callbacks.earlyStopping({ patience: 3 }),
-        ]
+          tf.callbacks.earlyStopping({
+            patience: 5,
+            minDelta: 0.01,
+          }),
+        ],
       });
+
+      this.logger.log(
+        `Precisión final en entrenamiento: ${history.history['acc'].at(-1)}`,
+      );
+      this.logger.log(
+        `Precisión final en validación: ${history.history['val_acc'].at(-1)}`,
+      );
+
 
       await this.saveModelWeights();
       this.logger.log('Modelo entrenado exitosamente');
@@ -122,26 +149,39 @@ export class JobRecommenderModel implements OnModuleInit {
           application.offer,
         );
 
-        const combinedFeatures = [
+        // Ensure consistent feature structure
+        const candidateFeatures = [
           ...candidateData.skillsTensor,
-          ...offerData.skillsTensor,
           candidateData.locationTensor,
-          offerData.locationTensor,
           candidateData.salaryTensor,
+          0,
+          0,
+          0,
+          0, // Contract tensor placeholders for candidate
+        ];
+
+        const combinedFeatures = [
+          ...candidateFeatures,
+          ...offerData.skillsTensor,
+          offerData.locationTensor,
+          offerData.salaryTensor,
           ...offerData.contractTensor,
         ];
 
         featuresArray.push(combinedFeatures);
         labelsArray.push([application.status === 'accepted' ? 1 : 0]);
       } catch (error) {
-        this.logger.warn(`Error procesando aplicación ${application.id}: ${error.message}`);
+        this.logger.warn(
+          `Error procesando aplicación ${application.id}: ${error.message}`,
+        );
       }
     }
 
     if (featuresArray.length === 0) {
-      return { 
-        features: tf.tensor2d([], [0, this.NUM_SKILLS * 2 + 2 + 1 + 4]), 
-        labels: tf.tensor2d([], [0, 1]) 
+      const inputSize = this.NUM_SKILLS + 2 + 4 + (this.NUM_SKILLS + 2 + 4);
+      return {
+        features: tf.tensor2d([], [0, inputSize]),
+        labels: tf.tensor2d([], [0, 1]),
       };
     }
 
@@ -161,12 +201,11 @@ export class JobRecommenderModel implements OnModuleInit {
       
       // Combine candidate embedding with offer data
       const inputFeatures = [
-        ...candidateEmbedding,                // Candidate skills
-        ...offerData.skillsTensor,            // Offer skills
-        candidateEmbedding[candidateEmbedding.length - 2], // Candidate location
-        offerData.locationTensor,             // Offer location
-        candidateEmbedding[candidateEmbedding.length - 1], // Candidate salary
-        ...offerData.contractTensor,          // Contract types
+        ...candidateEmbedding, // Candidate skills + location + salary + contract
+        ...offerData.skillsTensor, // Offer skills
+        offerData.locationTensor, // Offer location
+        offerData.salaryTensor, // Offer salary
+        ...offerData.contractTensor, // Offer contract types
       ];
       
       const input = tf.tensor2d([inputFeatures]);
@@ -187,16 +226,24 @@ export class JobRecommenderModel implements OnModuleInit {
     }
     
     try {
-      const candidateData = this.dataPreprocessor.preprocessCandidate(candidate);
+      const candidateData =
+        this.dataPreprocessor.preprocessCandidate(candidate);
+      // Ensure we return the same structure as expected in calculateOfferMatch
       return [
         ...candidateData.skillsTensor,
         candidateData.locationTensor,
         candidateData.salaryTensor,
+        0,
+        0,
+        0,
+        0, // Contract tensor placeholders for candidate
       ];
     } catch (error) {
-      this.logger.error(`Error generando embedding de candidato: ${error.message}`);
-      // Return zero vector as fallback
-      return Array(this.NUM_SKILLS + 2).fill(0);
+      this.logger.error(
+        `Error generando embedding de candidato: ${error.message}`,
+      );
+      // Return zero vector as fallback with correct size
+      return Array(this.NUM_SKILLS + 2 + 4).fill(0); // skills + location + salary + contract
     }
   }
 

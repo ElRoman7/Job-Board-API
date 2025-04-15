@@ -9,7 +9,9 @@ export class ModalityType {
   @Column()
   name: string;
 
-  @ManyToMany(() => Offer, (offer) => offer.modalityTypes)
+  @ManyToMany(() => Offer, (offer) => offer.modalityTypes, {
+    onDelete: 'CASCADE',
+  })
   @JoinTable()
   jobOffers: Offer[];
 }
@@ -22,7 +24,9 @@ export class ContractType {
   @Column()
   name: string;
 
-  @ManyToMany(() => Offer, (offer) => offer.contractTypes)
+  @ManyToMany(() => Offer, (offer) => offer.contractTypes, {
+    onDelete: 'CASCADE',
+  })
   @JoinTable()
   jobOffers: Offer[];
 }
@@ -35,7 +39,9 @@ export class ExperienceLevel {
   @Column()
   name: string;
 
-  @ManyToMany(() => Offer, (offer) => offer.experienceLevels)
+  @ManyToMany(() => Offer, (offer) => offer.experienceLevels, {
+    onDelete: 'CASCADE',
+  })
   @JoinTable()
   jobOffers: Offer[];
 }
@@ -48,7 +54,7 @@ export class WorkArea {
   @Column()
   name: string;
 
-  @ManyToMany(() => Offer, (offer) => offer.workAreas)
+  @ManyToMany(() => Offer, (offer) => offer.workAreas, { onDelete: 'CASCADE' })
   @JoinTable()
   jobOffers: Offer[];
 }
@@ -61,7 +67,9 @@ export class AdditionalBenefit {
   @Column()
   name: string;
 
-  @ManyToMany(() => Offer, (offer) => offer.additionalBenefits)
+  @ManyToMany(() => Offer, (offer) => offer.additionalBenefits, {
+    onDelete: 'CASCADE',
+  })
   @JoinTable()
   jobOffers: Offer[];
 }

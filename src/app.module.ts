@@ -34,6 +34,7 @@ import { RecommendationModule } from './recommendation/recommendation.module';
       autoLoadEntities: true,
       synchronize: true,
     }),
+    
     OffersModule,
     CompaniesModule,
     RecruitersModule,
