@@ -561,7 +561,7 @@ export class OffersService {
         `Found ${offers.length} active offers to process for recommendations`,
       );
 
-      // Get personalized recommendations
+      // Get personalized recommendations with scores
       const recommendations =
         await this.recommendationService.getPersonalizedRecommendations(
           userId,
@@ -577,29 +577,59 @@ export class OffersService {
         console.log(
           'No recommendations returned, providing random fallback offers',
         );
-        // Return random offers if no recommendations
         return offers.sort(() => Math.random() - 0.5).slice(0, limit);
       }
 
-      // Filter offers based on recommendation IDs
-      const recommendedOffers = recommendations
-        .map((recommendation) => {
-          return offers.find((offer) => offer.id === recommendation.offerId);
-        })
-        .filter(Boolean); // Remove any undefined values
-
-      console.log(
-        `Final recommended offers count: ${recommendedOffers.length}`,
+      // Create a map of recommendations by offerId for quick lookup
+      const recommendationsMap = new Map(
+        recommendations.map((rec) => [rec.offerId, rec]),
       );
 
-      if (recommendedOffers.length === 0) {
-        console.log(
-          'After mapping recommendations to offers got empty array, providing fallback',
-        );
+      // Filter and sort offers based on recommendation scores
+      const sortedOffers = offers
+        .filter((offer) => recommendationsMap.has(offer.id))
+        .map((offer) => {
+          const recommendation = recommendationsMap.get(offer.id);
+          return {
+            ...offer,
+            _score: recommendation.matchScore,
+            _mlScore: recommendation.scoreDetails?.mlScore || 0.5,
+            _heuristicScore: recommendation.scoreDetails?.heuristicScore || 0,
+          };
+        })
+        .sort((a, b) => {
+          // Primary sort by matchScore
+          const scoreDiff = b._score - a._score;
+          if (Math.abs(scoreDiff) > 0.1) {
+            // Si hay una diferencia significativa en scores
+            return scoreDiff;
+          }
+
+          // Secondary sort by ML score if match scores are close
+          const mlScoreDiff = b._mlScore - a._mlScore;
+          if (Math.abs(mlScoreDiff) > 0.1) {
+            return mlScoreDiff;
+          }
+
+          // Finally sort by heuristic score
+          return b._heuristicScore - a._heuristicScore;
+        })
+        .map((offer) => {
+          // Remove temporary scoring properties
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { _score, _mlScore, _heuristicScore, ...cleanOffer } = offer;
+          return cleanOffer;
+        })
+        .slice(0, limit);
+
+      console.log(`Final recommended offers count: ${sortedOffers.length}`);
+
+      if (sortedOffers.length === 0) {
+        console.log('After filtering got empty array, providing fallback');
         return offers.sort(() => Math.random() - 0.5).slice(0, limit);
       }
 
-      return recommendedOffers;
+      return sortedOffers;
     } catch (error) {
       console.error('Error in getPersonalizedRecommendations:', error);
 

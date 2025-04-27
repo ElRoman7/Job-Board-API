@@ -11,6 +11,7 @@ import { EncoderService } from 'src/common/encoder.service';
 import { ActivateUserDto } from './dto/activate-user.dto';
 import { ValidRoles } from './interfaces/valid-roles';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { ResetPasswordDto } from 'src/auth/dto/reset-password.dto';
 @Injectable()
 export class UsersService {
   constructor(
@@ -113,6 +114,45 @@ export class UsersService {
     await this.updateUser({ profileImageUrl: url }, id);
     return {
       message: 'Profile image updated successfully',
+    };
+  }
+  async resetPassword(resetPasswordDto: ResetPasswordDto, user: User) {
+    const { password, newPassword } = resetPasswordDto;
+
+    // Get the user with password field selected
+    const userWithPassword = await this.usersRepository.findOne({
+      where: { id: user.id },
+      select: [
+        'id',
+        'password',
+        'email',
+        'name',
+        'phoneNumber',
+        'roles',
+        'profileImageUrl',
+        'is_active',
+        'activationToken',
+        'resetPasswordToken',
+        'created_at',
+        'updated_at',
+      ],
+    });
+
+    if (!bcrypt.compareSync(password, userWithPassword.password)) {
+      throw new BadRequestException('Invalid user password');
+    }
+
+    if (password === newPassword) {
+      throw new BadRequestException('New Password must be different');
+    }
+
+    const hashedPassword = bcrypt.hashSync(newPassword, 10);
+    userWithPassword.password = hashedPassword;
+    await this.usersRepository.save(userWithPassword);
+
+    return {
+      message: 'Password updated successfully',
+      status: 200,
     };
   }
 

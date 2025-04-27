@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get} from '@nestjs/common';
+import { Controller, Post, Body, Get } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { User } from 'src/users/entities/user.entity';
@@ -19,6 +19,4 @@ export class AuthController {
     // Algo
     return await this.authService.refresh(user);
   }
-
-  // ToDo: Request reset password and reset password method (Repo: auth-nestjs)
 }

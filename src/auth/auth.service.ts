@@ -3,21 +3,20 @@ import { LoginDto } from './dto/login.dto';
 import { UsersService } from '../users/users.service';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
 import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcrypt'
+import * as bcrypt from 'bcrypt';
 import { LoginResponseDto } from './dto/login-response.dto';
 import { User } from 'src/users/entities/user.entity';
 
 @Injectable()
 export class AuthService {
-
   constructor(
     private readonly JwtService: JwtService,
-    private readonly usersService : UsersService
+    private readonly usersService: UsersService,
   ) {}
 
   async login(loginDto: LoginDto) {
-    const {email, password} = loginDto
-    const user = await this.usersService.finOneByEmail(email)
+    const { email, password } = loginDto;
+    const user = await this.usersService.finOneByEmail(email);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials (email)');
     }
@@ -26,11 +25,11 @@ export class AuthService {
     }
 
     const userData = await this.usersService.findOneById(user.id);
-    const token = this.getJwt({id: userData.id})
+    const token = this.getJwt({ id: userData.id });
 
     return {
       user: userData,
-      token
+      token,
     };
   }
 
@@ -39,7 +38,7 @@ export class AuthService {
     return token;
   }
 
-  async refresh(user: User): Promise <LoginResponseDto> {
+  async refresh(user: User): Promise<LoginResponseDto> {
     const token = await this.getJwt({ id: user.id });
     return {
       id: user.id,
@@ -51,8 +50,4 @@ export class AuthService {
       token,
     };
   }
-
-
-
-
 }
