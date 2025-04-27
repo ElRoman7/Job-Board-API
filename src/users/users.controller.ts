@@ -47,7 +47,7 @@ export class UsersController {
   }
 
   @Auth(ValidRoles.candidate, ValidRoles.company, ValidRoles.recruiter)
-  @Patch('update/:id')
+  @Patch(':id')
   updateAccount(@Body() updateUserDto: UpdateUserDto, @Param('id') id: string) {
     return this.usersService.updateUser(updateUserDto, id);
   }
