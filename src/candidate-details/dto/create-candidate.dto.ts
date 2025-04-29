@@ -1,4 +1,5 @@
-import { IsOptional, IsString, IsUrl } from "class-validator";
+import { Transform } from 'class-transformer';
+import { IsOptional, IsString, IsUrl } from 'class-validator';
 
 export class CreateCandidateDto {
   @IsOptional()
@@ -9,11 +10,13 @@ export class CreateCandidateDto {
   @IsOptional()
   @IsString()
   @IsUrl()
+  @Transform(({ value }) => (value === '' ? undefined : value))
   linkedinUrl?: string;
 
   @IsOptional()
   @IsString()
   @IsUrl()
+  @Transform(({ value }) => (value === '' ? undefined : value))
   portfolioUrl?: string;
 
   @IsString()
@@ -28,6 +31,7 @@ export class CreateCandidateDto {
   @IsOptional()
   @IsString()
   @IsUrl()
+  @Transform(({ value }) => (value === '' ? undefined : value))
   website?: string; // Sitio web de la empresa
 
   //TODO
