@@ -31,9 +31,10 @@ export class OffersController {
     return this.offersService.create(createOfferDto, user);
   }
   //Usado por candidates o usuarios no autenticados
+  @Auth(ValidRoles.candidate, ValidRoles.company, ValidRoles.recruiter)
   @Get()
-  findAll(@Query() paginationDto: PaginationDto) {
-    return this.offersService.findAll(paginationDto);
+  findAll(@Query() paginationDto: PaginationDto, @GetUser() user: User) {
+    return this.offersService.findAll(paginationDto, user);
   }
 
   @Get('/modality-types')
@@ -69,10 +70,7 @@ export class OffersController {
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
   ) {
     const userId = req.user.id;
-    return this.offersService.getPersonalizedRecommendations(
-      userId,
-      limit,
-    );
+    return this.offersService.getPersonalizedRecommendations(userId, limit);
   }
 
   //Get Offers By company or recruiters

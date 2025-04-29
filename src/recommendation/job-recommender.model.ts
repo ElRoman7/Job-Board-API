@@ -193,12 +193,14 @@ export class JobRecommenderModel implements OnModuleInit {
 
   async calculateOfferMatch(offer: Offer, candidateEmbedding: number[]): Promise<number> {
     if (!this.isModelReady) {
+      this.logger.warn('Model not ready, initializing...');
       await this.initializeModel();
     }
-    
+
     try {
       const offerData = this.dataPreprocessor.preprocessOffer(offer);
-      
+      this.logger.debug(`Processed offer data for offer ${offer.id}`);
+
       // Combine candidate embedding with offer data
       const inputFeatures = [
         ...candidateEmbedding, // Candidate skills + location + salary + contract
@@ -207,29 +209,41 @@ export class JobRecommenderModel implements OnModuleInit {
         offerData.salaryTensor, // Offer salary
         ...offerData.contractTensor, // Offer contract types
       ];
-      
+
+      this.logger.debug(`Input features length: ${inputFeatures.length}`);
+
       const input = tf.tensor2d([inputFeatures]);
       const prediction = this.model.predict(input) as tf.Tensor;
       const score = prediction.dataSync()[0];
-      
+
+      this.logger.debug(`Calculated score for offer ${offer.id}: ${score}`);
+
       tf.dispose([input, prediction]);
       return score;
     } catch (error) {
-      this.logger.error(`Error calculando match de oferta: ${error.message}`);
+      this.logger.error(
+        `Error calculating match of offer ${offer.id}: ${error.message}`,
+      );
+      this.logger.error(error.stack);
       return 0.5; // Valor neutro
     }
   }
 
   async generateRecommendationEmbedding(candidate: Candidate): Promise<number[]> {
     if (!this.isModelReady) {
+      this.logger.warn('Model not ready, initializing...');
       await this.initializeModel();
     }
-    
+
     try {
       const candidateData =
         this.dataPreprocessor.preprocessCandidate(candidate);
+      this.logger.debug(
+        `Processed candidate data for candidate ${candidate.id}`,
+      );
+
       // Ensure we return the same structure as expected in calculateOfferMatch
-      return [
+      const embedding = [
         ...candidateData.skillsTensor,
         candidateData.locationTensor,
         candidateData.salaryTensor,
@@ -238,10 +252,14 @@ export class JobRecommenderModel implements OnModuleInit {
         0,
         0, // Contract tensor placeholders for candidate
       ];
+
+      this.logger.debug(`Generated embedding length: ${embedding.length}`);
+      return embedding;
     } catch (error) {
       this.logger.error(
-        `Error generando embedding de candidato: ${error.message}`,
+        `Error generating embedding for candidate ${candidate.id}: ${error.message}`,
       );
+      this.logger.error(error.stack);
       // Return zero vector as fallback with correct size
       return Array(this.NUM_SKILLS + 2 + 4).fill(0); // skills + location + salary + contract
     }

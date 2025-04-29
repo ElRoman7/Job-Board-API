@@ -173,7 +173,7 @@ export class OffersService {
    *   additionalBenefitIds: [10, 11]
    * });
    */
-  async findAll(paginationDto: PaginationDto) {
+  async findAll(paginationDto: PaginationDto, user: User) {
     const {
       limit = 15,
       offset = 0,
@@ -261,10 +261,28 @@ export class OffersService {
     // Execute query
     const offers = await queryBuilder.getMany();
 
-    // Transform offers to have consistent format with recommendations
-    const formattedOffers = offers.map((offer) => ({
-      ...offer,
-    }));
+    // Get recommendations for each offer
+    const recommendations = await Promise.all(
+      offers.map(async (offer) => {
+        const recommendation =
+          await this.recommendationService.getPersonalizedRecommendations(
+            user.id,
+            1,
+            [offer],
+          );
+        console.log(recommendation);
+
+        return {
+          offer,
+          score: recommendation[0]?.matchScore || 0,
+        };
+      }),
+    );
+
+    // Sort offers by recommendation score
+    const sortedOffers = recommendations
+      .sort((a, b) => b.score - a.score)
+      .map(({ offer }) => offer);
 
     // Count total based on filters
     let total = 0;
@@ -281,8 +299,9 @@ export class OffersService {
       const { count } = await countQueryBuilder.getRawOne();
       total = Number(count);
     }
+    // console.log(sortedOffers);
 
-    return { offers: formattedOffers, total, recruiterId };
+    return { offers: sortedOffers, total, recruiterId };
   }
 
   async findAllByCompany(user: User, paginationDto: PaginationDto) {
